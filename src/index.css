@@ -1,0 +1,7 @@
+@import "tailwindcss";
+
+body {
+  background: url("../src/assets/bgOverlayii.svg") no-repeat center center /
+      cover,
+    #f7f7f7;
+}
