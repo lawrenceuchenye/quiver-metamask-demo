@@ -9,7 +9,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { API_ENDPOINT } from "../utils";
 import { usePrivy, useWallets } from "@privy-io/react-auth";
 import { parseEther } from "ethers";
-import { providerToSmartAccountSigner } from 'permissionless';
+import { providerToSmartAccountSigner } from "permissionless";
 import { createPaymasterClient } from "viem/account-abstraction";
 
 import Loader from "../Loader";
@@ -17,9 +17,18 @@ import Loader from "../Loader";
 import btnOverlayW from "../../src/assets/btnOverlayW.svg";
 import btnOverlay from "../../src/assets/btnOverlay.svg";
 
-import { createPublicClient,createWalletClient, http,custom,defineChain} from "viem";
+import {
+  createPublicClient,
+  createWalletClient,
+  http,
+  custom,
+  defineChain,
+} from "viem";
 import { createBundlerClient } from "viem/account-abstraction";
-import { Implementation, toMetaMaskSmartAccount } from "@metamask/delegation-toolkit";
+import {
+  Implementation,
+  toMetaMaskSmartAccount,
+} from "@metamask/delegation-toolkit";
 
 const index: React.FC = () => {
   const [walletReadyBtnHit, setWalletReadyBtnHit] = useState(false);
@@ -30,58 +39,59 @@ const index: React.FC = () => {
   const [triggered, setIsTriggered] = useState<boolean>(false);
   const [role, setRole] = useState<string | null>(null);
   const [connectBtnHit, setConnectBtnHit] = useState<boolean>(false);
+  const [recoveringWallet, setRecoveringWallet] = useState<boolean>(false);
+
   const navigate = useNavigate();
   const { ready, authenticated, user, login, logout } = usePrivy();
   const location = useLocation();
   const { wallets } = useWallets();
 
   const monadTestnet = defineChain({
-  id: 10143,  // chain ID for Monad testnet (from ChainList) :contentReference[oaicite:1]{index=1}
-  name: "Monad Testnet",
-  network: "monad-testnet",
-  nativeCurrency: {
-    name: "MON",
-    symbol: "MON",
-    decimals: 18,
-  },
-  rpcUrls: {
-    default: { http: ["https://lb.drpc.org/monad-testnet/AoihSUDyHU9igiu5TQZMF0adY0_QnXoR8L-Xwg8TMB_n"] },
-    public: { http: ["https://lb.drpc.org/monad-testnet/AoihSUDyHU9igiu5TQZMF0adY0_QnXoR8L-Xwg8TMB_n"] },
-  },
-  blockExplorers: {
-    default: { name: "MonadScan", url: "https://testnet.monadexplorer.com/" },
-  },
-  // any extra settings if needed (e.g. contract address for deployments)
-  // you might also need to add formatters or serializers, if viem requires them
-});
+    id: 10143, // chain ID for Monad testnet (from ChainList) :contentReference[oaicite:1]{index=1}
+    name: "Monad Testnet",
+    network: "monad-testnet",
+    nativeCurrency: {
+      name: "MON",
+      symbol: "MON",
+      decimals: 18,
+    },
+    rpcUrls: {
+      default: {
+        http: [
+          "https://lb.drpc.org/monad-testnet/AoihSUDyHU9igiu5TQZMF0adY0_QnXoR8L-Xwg8TMB_n",
+        ],
+      },
+      public: {
+        http: [
+          "https://lb.drpc.org/monad-testnet/AoihSUDyHU9igiu5TQZMF0adY0_QnXoR8L-Xwg8TMB_n",
+        ],
+      },
+    },
+    blockExplorers: {
+      default: { name: "MonadScan", url: "https://testnet.monadexplorer.com/" },
+    },
+    // any extra settings if needed (e.g. contract address for deployments)
+    // you might also need to add formatters or serializers, if viem requires them
+  });
 
   const publicClient = createPublicClient({
-  chain:monadTestnet,
-  transport: http(`${import.meta.env.VITE_NETWORK_RPC}`),
-});
+    chain: monadTestnet,
+    transport: http(`${import.meta.env.VITE_NETWORK_RPC}`),
+  });
 
-const paymasterClient = createPaymasterClient({
-  transport: http(`${import.meta.env.VITE_NETWORK_RPC}`),
-});
+  const paymasterClient = createPaymasterClient({
+    transport: http(`${import.meta.env.VITE_BUNDLER_RPC}`),
+  });
 
-const token="0xf817257fed379853cde0fa4f97ab987181b1e5ea"
+  const replacer = (_key: string, value: any) => {
+    return typeof value === "bigint" ? value.toString() : value;
+  };
 
- const bundlerClient = createBundlerClient({
-  client: publicClient,
-  transport: http(`${import.meta.env.VITE_NETWORK_RPC}`),
-  
-    paymasterContext: {
-    token,
-  
-  }
-});
-
-
-
-
-
-
-
+  const bundlerClient = createBundlerClient({
+    chain: monadTestnet,
+    paymaster: paymasterClient,
+    transport: http(`${import.meta.env.VITE_BUNDLER_RPC}`),
+  });
 
   const ensureWallet = async () => {
     if (user && !user.wallet) {
@@ -98,51 +108,63 @@ const token="0xf817257fed379853cde0fa4f97ab987181b1e5ea"
     }
 
     const privyProvider = await embeddedWallet.getEthereumProvider();
-;
+    const walletClient = createWalletClient({
+      chain: monadTestnet,
+      transport: custom(privyProvider),
+    });
 
-const walletClient = createWalletClient({
-  chain: monadTestnet,
-  transport: custom(privyProvider),
-});
+    // get the connected account
+    const [address] = await walletClient.getAddresses();
+    const account = walletClient.account!;
 
-const addresses = await walletClient.getAddresses();
-const owner = addresses[0];
+    const smartAccountSigner = await providerToSmartAccountSigner(
+      privyProvider
+    );
+
+    const privyAccount = {
+      ...smartAccountSigner, // ✅ this already has signMessage, signTypedData, signUserOperation
+      address, // make sure address is set correctly
+      type: "json-rpc", // delegation toolkit expects this
+    };
+
+    setConnectBtnHit(true);
 
     const smartAccount = await toMetaMaskSmartAccount({
-  client: publicClient,
-  implementation: Implementation.Hybrid,
-  deployParams: [owner, [], [], []],
-  deploySalt: "0x",
-  signer: { walletClient },
-});
+      client: publicClient,
+      implementation: Implementation.Hybrid,
+      deployParams: [address, [], [], []],
+      deploySalt: "0x",
+      signer: { account: privyAccount },
+    });
 
+    console.log(smartAccount);
 
-console.log(smartAccount);
+    const gasPrice = await bundlerClient.request({
+      method: "pimlico_getUserOperationGasPrice",
+      params: [],
+    });
 
-const maxFeePerGas = 1n;
-const maxPriorityFeePerGas = 1n;
+    const feeData = await publicClient.estimateFeesPerGas();
 
-const userOperationHash = await bundlerClient.sendUserOperation({
-  account: smartAccount,
-  calls: [
-    {
-      to: "0x1234567890123456789012345678901234567890",
-      value: parseEther("1")
-    }
-  ],
-  maxFeePerGas,
-  maxPriorityFeePerGas,
-  paymaster: paymasterClient,
-});
+    const maxFeePerGas = feeData.maxFeePerGas;
+    const maxPriorityFeePerGas = feeData.maxPriorityFeePerGas;
 
-
-
-    // Construct a Kernel
-    // account
-    // Pass your `smartAccountSigner` to the validator
+    const userOperationHash = await bundlerClient.sendUserOperation({
+      account: smartAccount,
+      calls: [
+        {
+          to: smartAccount.address, // self-call, does nothing
+          value: 0n,
+        },
+      ],
+      maxFeePerGas: gasPrice.standard.maxFeePerGas,
+      maxPriorityFeePerGas: gasPrice.standard.maxPriorityFeePerGas,
+      paymaster: paymasterClient,
+    });
 
     const userEmail = user?.email["address"];
-/*
+
+    /*
     await axios
       .post(`${API_ENDPOINT}/api/create_user/`, {
         walletAddr: privyProvider?.address,
@@ -193,13 +215,11 @@ const userOperationHash = await bundlerClient.sendUserOperation({
 
   const connectDoubleCall = async () => {
     await connectWallet(localStorage.getItem("role"));
-
     if (!authenticated) {
       await new Promise((res) => {
         connectWallet(role);
       });
     }
-
     setConnectBtnHit(true);
   };
 
@@ -232,7 +252,7 @@ const userOperationHash = await bundlerClient.sendUserOperation({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="roleContainer">
-          {(!authenticated || !localStorage.getItem("role")) && (
+          {!authenticated && (
             <div className="roleBtnContainer">
               <m.h1
                 style={{
@@ -248,20 +268,15 @@ const userOperationHash = await bundlerClient.sendUserOperation({
             </div>
           )}
 
-          {!(!localStorage.getItem("role") || !authenticated) && (
+          {authenticated && (
             <div>
               <div className="roleBtnContainer">
                 <div className="setDiv">
-                  <h2>
-                    {!authenticated
-                      ? "Wallet Ready"
-                      : walletIsActive
-                      ? "Sign in"
-                      : "Recovering Wallet"}
-                  </h2>
+                  <h2>Wallet Ready</h2>
                   <i className="fa-solid fa-wallet" />
                 </div>
-                {(!connectBtnHit || !localStorage.getItem("role")) && (
+
+                {!connectBtnHit && (
                   <m.h1
                     style={{
                       background: `url(${btnOverlay}) no-repeat center center /
@@ -274,19 +289,18 @@ const userOperationHash = await bundlerClient.sendUserOperation({
                     }}
                     whileTap={{ scale: 1.2 }}
                   >
-                    {role ? "Tap to Launch" : "Tap to Sign in"}
+                    Tap to Launch
                     <i style={{ scale: 1.2 }} class="fa-solid fa-rocket"></i>
                   </m.h1>
                 )}
 
-                {connectBtnHit && localStorage.getItem("quiverUserSession") && (
+                {connectBtnHit && (
                   <m.h1
                     style={{
                       background: `url(${btnOverlay}) no-repeat center center /
       cover,
      oklch(72.3% 0.219 149.579)`,
                     }}
-                    onClick={() => !connectBtnHit && connectWallet(role)}
                     whileTap={{ scale: 1.2 }}
                   >
                     <Loader />
