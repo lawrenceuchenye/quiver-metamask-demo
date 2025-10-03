@@ -6,8 +6,7 @@ import axios from "axios";
 const chain = base;
 
 const CA = "0x1d8b0d97900319aE0778cE45D67eA45cDaBF602B"; //"0x1d8b0d97900319aE0778cE45D67eA45cDaBF602B";
-const TA = "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913";
-const GAS_TOKEN_CA = "0xf73978b3a7d1d4974abae11f696c1b4408c027a0";
+const TA = "0xf817257fed379853cDe0fa4F97AB987181B1E5Ea";
 const API_ENDPOINT = "https://twiddlemart.com";
 const FEE_1 = 0.05;
 const FEE_2 = 0.1;
@@ -264,7 +263,6 @@ export {
   getClosestSent,
   getClosestText,
   TA,
-  GAS_TOKEN_CA,
   API_ENDPOINT,
   FEE_1,
   FEE_2,

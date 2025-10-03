@@ -6,6 +6,8 @@ import { useRef, useState } from "react";
 import { motion as m } from "framer-motion";
 import btnOverlay from "../../src/assets/btnOverlay.svg";
 import Loader from "../Loader";
+import SHA256 from "crypto-js/sha256";
+import encHex from "crypto-js/enc-hex";
 
 import { toast } from "react-toastify";
 import { API_ENDPOINT } from "../utils";
@@ -33,19 +35,17 @@ const SetUpPIN: React.FC = () => {
     triggerOnChange();
   };
 
+  const hashPIN = (str) => {
+    return createHash("sha256").update(str).digest("hex");
+  };
+
   const getPINHash = async () => {
     if (pin?.length == 4) {
       setIsProcessing(true);
-      try {
-        const res = await axios.post(`${API_ENDPOINT}/api/cipher/`, {
-          data: pin,
-          type: "none",
-        });
-        setUserData({ ...userData, pinHash: res.data.data });
-        setIsProcessing(false);
-      } catch (e) {
-        console.error(e);
-      }
+      const hash = SHA256(pin).toString(encHex);
+      localStorage.setItem("quiverUserPIN", hash);
+      setUserData({ ...userData, pinHash: hash });
+      setIsProcessing(false);
     }
   };
   // Combine all inputs into PIN
@@ -151,15 +151,9 @@ const ConfirmPIN: React.FC = () => {
   const setUserPin = async () => {
     setIsProcessing(true);
     try {
-      const res = await axios.post(`${API_ENDPOINT}/api/set_pin/`, {
-        data: {
-          sessionHash: localStorage.getItem("quiverUserSession"),
-          pin: pin,
-          email: userData?.email,
-        },
-      });
+      const hash = SHA256(pin).toString(encHex);
       setIsProcessing(false);
-      if (!res.data.success) {
+      if (!hash == localStorage.getItem("quiverUserPIN")) {
         toast.error(`INCORRECT PIN,CANCEL OR RETRY `, {
           position: "top-right",
           autoClose: 5000,
@@ -181,7 +175,7 @@ const ConfirmPIN: React.FC = () => {
           progress: undefined,
           theme: "colored",
         });
-        setUserData({ ...userData, is_pin_active: res.data.success });
+        setUserData({ ...userData, is_pin_active: true });
       }
     } catch (e) {
       console.error(e);

@@ -164,31 +164,20 @@ const index: React.FC = () => {
 
     const userEmail = user?.email["address"];
 
-    /*
-    await axios
-      .post(`${API_ENDPOINT}/api/create_user/`, {
-        walletAddr: privyProvider?.address,
+    setConnectClicked(false);
+    if (smartAccount) {
+      setUserData({
+        walletAddr: smartAccount.address,
+        role: "REG_USER",
+        reg_date: "01/2/2025",
+        is_verified: true,
+        is_pin_active: false,
+        is_pin_disabled: true,
         email: userEmail,
-      })
-      .then(function (response) {
-        setConnectClicked(false);
-        if (response.data.success) {
-          setUserData({
-            walletAddr: response.data.user_data.walletaddress,
-            role: response.data.user_data.role,
-            reg_date: response.data.user_data.reg_date,
-            is_verified: response.data.user_data.isVerified,
-            is_pin_active: response.data.user_data.isPinActive,
-            is_pin_disabled: response.data.user_data.disablePin,
-            email: userEmail,
-            card_color: "oklch(37.1% 0 0)",
-          });
-          navigate("/home");
-        }
-      })
-      .catch(function (error) {
-        console.log(error);
-      })*/
+        card_color: "oklch(37.1% 0 0)",
+      });
+      navigate("/home");
+    }
 
     setConnectBtnHit(true);
   };
