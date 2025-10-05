@@ -11,9 +11,10 @@ import { toast } from "react-toastify";
 import Loader from "../Loader";
 import { getClosestSent, getClosestText } from "../utils";
 import btnOverlayW from "../../src/assets/btnOverlayW.svg";
-import { API_ENDPOINT, hashStringSHA256 } from "../utils";
+import { API_ENDPOINT, hashStringSHA256, sendUserOpsTransfer } from "../utils";
 import { usePrivy } from "@privy-io/react-auth";
 import { getNames } from "@coinbase/onchainkit/identity";
+import { useWallets } from "@privy-io/react-auth";
 import { base } from "viem/chains";
 import JSEncrypt from "jsencrypt";
 import btnOverlay from "../../src/assets/btnOverlay.svg";
@@ -70,10 +71,12 @@ const OffRamp: React.FC = () => {
   const incrementRefreshCount = useQuiverStore(
     (state) => state.incrementRefreshCount
   );
+  const { wallets } = useWallets();
   const { user } = usePrivy();
   const isPending = useQuiverStore((state) => state.isPending);
   const setIsPending = useQuiverStore((state) => state.setIsPending);
   const userData = useQuiverStore((state) => state.userData);
+  const smartAccount = useQuiverStore((state) => state.smartAccount);
   const [isEVMTarget, setIsEVMTarget] = useState<boolean>(false);
   const setOffRampData = useQuiverStore((state) => state.setOffRampData);
   const [supportedBank, setSupportedBanks] = useState<null | Bank[]>(null);
@@ -94,10 +97,13 @@ const OffRamp: React.FC = () => {
 
   const isEVMAddr = (input: string) => {
     const trimmed = input.trim();
+    // Check if it's a bank account (only digits, length 6–20)
+    const isBankAccount = /^\d{6,20}$/.test(trimmed);
 
-    const isBankAccount = /^\d{6,20}$/.test(trimmed); // Adjust range if needed
+    // Check if it's a valid EVM address (0x + 40 hex chars)
+    const isEVMAddress = /^0x[a-fA-F0-9]{40}$/.test(trimmed);
 
-    if (isEVMTarget) return true;
+    if (isEVMAddress) return true;
     if (isBankAccount) return false;
 
     return false;
@@ -246,28 +252,12 @@ const OffRamp: React.FC = () => {
 
   const handleUserTx = async () => {
     console.log(user);
-
     if (isTxApproved || userData?.is_pin_disabled) {
       setIsTxApproved(false);
       if (isEVMTarget) {
         setIsProcessing(true);
-        const res = await axios.post(
-          `${API_ENDPOINT}/api/wallet_withdrawal_ops/`,
-          {
-            type: "transfer",
-            amount: amount,
-            from: userData?.walletAddr,
-            to: targetID,
-          }
-        );
-        setIsSuccess(res.data.success);
-        if (res.data.success) {
-          await axios.post(`${API_ENDPOINT}/api/create_tx/`, {
-            type: "CashFlow",
-            amount: -amount,
-            from: userData?.walletAddr,
-            to: targetID,
-          });
+        const success = await sendUserOpsTransfer(targetID, amount, wallets);
+        if (success) {
           setIsProcessing(false);
           setIsPending(true);
         } else {
@@ -284,11 +274,10 @@ const OffRamp: React.FC = () => {
   };
 
   useEffect(() => {
-    if (isProcessing || isTxApproved) {
+    if (isProcessing) {
       handleUserTx();
     }
-    console.log("called");
-  }, [isTxApproved, isProcessing]);
+  }, [isProcessing]);
 
   const getBankInfo = async () => {
     if (supportedBank) {
@@ -423,7 +412,7 @@ const OffRamp: React.FC = () => {
                 }}
               >
                 <p>
-                  <i className="fa-solid fa-stop"></i> BASE
+                  <i className="fa-solid fa-stop"></i> MONAD
                 </p>
               </div>
             </div>

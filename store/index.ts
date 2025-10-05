@@ -114,6 +114,7 @@ interface QuiverState {
   isDisablingPIN: boolean;
   isChangeCardColor: boolean;
   isViewBatch: boolean;
+  smartAccount: any;
   setBillBatch: (
     _batch: (Airtime | Data | Electricity | Cable | null)[]
   ) => void;
@@ -140,6 +141,7 @@ interface QuiverState {
   setBillInfo: (bill: null | Airtime | Data | Electricity) => void;
   setIsStake: (isStake: boolean) => void;
   setIsStaked: (isStaked: boolean) => void;
+  setSmartAcount: (SmartAccount: any) => void;
 }
 
 const useQuiverStore = create<QuiverState>((set) => ({
@@ -168,6 +170,10 @@ const useQuiverStore = create<QuiverState>((set) => ({
   isChangeCardColor: false,
   isViewBatch: false,
   billBatch: null,
+  smartAccount: null,
+  setSmartAcount: (_smartAccount: any) => {
+    set(() => ({ smartAccount: _smartAccount }));
+  },
   setIsViewBatch: (_isView: boolean) => {
     set(() => ({ isViewBatch: _isView }));
   },

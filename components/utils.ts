@@ -1,8 +1,26 @@
-import { ethers } from "ethers";
+import { ethers, parseUnits } from "ethers";
 import { toast } from "react-toastify";
-import { erc20Abi } from "viem";
+import {
+  createPublicClient,
+  createWalletClient,
+  custom,
+  defineChain,
+  encodeFunctionData,
+  erc20Abi,
+  http,
+} from "viem";
+import { providerToSmartAccountSigner } from "permissionless";
 import { base } from "wagmi/chains";
+import {
+  createBundlerClient,
+  createPaymasterClient,
+} from "viem/account-abstraction";
+
 import axios from "axios";
+import {
+  toMetaMaskSmartAccount,
+  Implementation,
+} from "@metamask/delegation-toolkit";
 const chain = base;
 
 const CA = "0x1d8b0d97900319aE0778cE45D67eA45cDaBF602B"; //"0x1d8b0d97900319aE0778cE45D67eA45cDaBF602B";
@@ -253,15 +271,142 @@ const hashStringSHA256 = async (message: string) => {
   return hashHex;
 };
 
+const monadTestnet = defineChain({
+  id: 10143, // chain ID for Monad testnet (from ChainList) :contentReference[oaicite:1]{index=1}
+  name: "Monad Testnet",
+  network: "monad-testnet",
+  nativeCurrency: {
+    name: "MON",
+    symbol: "MON",
+    decimals: 18,
+  },
+  rpcUrls: {
+    default: {
+      http: [
+        "https://lb.drpc.org/monad-testnet/AoihSUDyHU9igiu5TQZMF0adY0_QnXoR8L-Xwg8TMB_n",
+      ],
+    },
+    public: {
+      http: [
+        "https://lb.drpc.org/monad-testnet/AoihSUDyHU9igiu5TQZMF0adY0_QnXoR8L-Xwg8TMB_n",
+      ],
+    },
+  },
+  blockExplorers: {
+    default: { name: "MonadScan", url: "https://testnet.monadexplorer.com/" },
+  },
+  // any extra settings if needed (e.g. contract address for deployments)
+  // you might also need to add formatters or serializers, if viem requires them
+});
+
+const paymasterClient = createPaymasterClient({
+  transport: http(`${import.meta.env.VITE_BUNDLER_RPC}`),
+});
+
+const publicClient = createPublicClient({
+  chain: monadTestnet,
+  transport: http(`${import.meta.env.VITE_NETWORK_RPC}`),
+});
+
+const bundlerClient = createBundlerClient({
+  chain: monadTestnet,
+  paymaster: paymasterClient,
+  transport: http(`${import.meta.env.VITE_BUNDLER_RPC}`),
+});
+
+const sendUserOpsTransfer = async (
+  walletAddr: string,
+  usdcAmt: number,
+  privyWallets: any
+) => {
+  const transferCalldata = encodeFunctionData({
+    abi: [
+      {
+        name: "transfer",
+        type: "function",
+        stateMutability: "nonpayable",
+        inputs: [
+          { name: "to", type: "address" },
+          { name: "amount", type: "uint256" },
+        ],
+        outputs: [{ name: "", type: "bool" }],
+      },
+    ],
+    functionName: "transfer",
+    args: [walletAddr, parseUnits(`${usdcAmt}`, 6)],
+  });
+
+  const embeddedWallet_ = await privyWallets.find(
+    (wallet) => wallet.walletClientType === "privy"
+  );
+
+  console.log(embeddedWallet_);
+  const privyProvider = await embeddedWallet_.getEthereumProvider();
+  const walletClient = createWalletClient({
+    chain: monadTestnet,
+    transport: custom(privyProvider),
+  });
+
+  // get the connected account
+  const [address] = await walletClient.getAddresses();
+
+  const smartAccountSigner = await providerToSmartAccountSigner(privyProvider);
+
+  const privyAccount = {
+    ...smartAccountSigner, // ✅ this already has signMessage, signTypedData, signUserOperation
+    address, // make sure address is set correctly
+    type: "json-rpc", // delegation toolkit expects this
+  };
+
+  const smartAccount = await toMetaMaskSmartAccount({
+    client: publicClient,
+    implementation: Implementation.Hybrid,
+    deployParams: [address, [], [], []],
+    deploySalt: "0x",
+    signer: { account: privyAccount },
+  });
+
+  const gasPriceResponse = await bundlerClient.request({
+    method: "pimlico_getUserOperationGasPrice",
+    params: [],
+  });
+
+  const maxFeePerGas = BigInt(gasPriceResponse.standard.maxFeePerGas);
+  const maxPriorityFeePerGas = BigInt(
+    gasPriceResponse.standard.maxPriorityFeePerGas
+  );
+
+  const userOperationHash = await bundlerClient.sendUserOperation({
+    account: smartAccount,
+    calls: [
+      {
+        to: TA, // self-call, does nothing
+        data: transferCalldata,
+      },
+    ],
+    maxFeePerGas: maxFeePerGas,
+    maxPriorityFeePerGas: maxPriorityFeePerGas,
+    paymaster: paymasterClient,
+  });
+
+  console.log(userOperationHash);
+  return true;
+};
+
 export {
   saveSession,
   loadState,
+  publicClient,
+  sendUserOpsTransfer,
+  paymasterClient,
+  bundlerClient,
   CA,
   hashStringSHA256,
   sendUSDC,
   chain,
   getClosestSent,
   getClosestText,
+  monadTestnet,
   TA,
   API_ENDPOINT,
   FEE_1,

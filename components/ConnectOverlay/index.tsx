@@ -6,24 +6,22 @@ import { motion as m } from "framer-motion";
 import useQuiverStore from "../../store";
 import axios from "axios";
 import { useLocation, useNavigate } from "react-router-dom";
-import { API_ENDPOINT } from "../utils";
+import {
+  API_ENDPOINT,
+  bundlerClient,
+  monadTestnet,
+  publicClient,
+} from "../utils";
 import { usePrivy, useWallets } from "@privy-io/react-auth";
 import { parseEther } from "ethers";
 import { providerToSmartAccountSigner } from "permissionless";
-import { createPaymasterClient } from "viem/account-abstraction";
 
 import Loader from "../Loader";
 
 import btnOverlayW from "../../src/assets/btnOverlayW.svg";
 import btnOverlay from "../../src/assets/btnOverlay.svg";
 
-import {
-  createPublicClient,
-  createWalletClient,
-  http,
-  custom,
-  defineChain,
-} from "viem";
+import { createPublicClient, createWalletClient, http, custom } from "viem";
 import { createBundlerClient } from "viem/account-abstraction";
 import {
   Implementation,
@@ -35,6 +33,8 @@ const index: React.FC = () => {
   const [walletIsActive, setWalletIsActive] = useState<boolean>(true);
   const setConnectClicked = useQuiverStore((state) => state.setConnectClicked);
   const setUserData = useQuiverStore((state) => state.setUserData);
+  const setSmartAccount = useQuiverStore((state) => state.setSmartAcount);
+
   const [embeddedWallet, setEmbeddedWallet] = useState<any | null>(null);
   const [triggered, setIsTriggered] = useState<boolean>(false);
   const [role, setRole] = useState<string | null>(null);
@@ -46,52 +46,9 @@ const index: React.FC = () => {
   const location = useLocation();
   const { wallets } = useWallets();
 
-  const monadTestnet = defineChain({
-    id: 10143, // chain ID for Monad testnet (from ChainList) :contentReference[oaicite:1]{index=1}
-    name: "Monad Testnet",
-    network: "monad-testnet",
-    nativeCurrency: {
-      name: "MON",
-      symbol: "MON",
-      decimals: 18,
-    },
-    rpcUrls: {
-      default: {
-        http: [
-          "https://lb.drpc.org/monad-testnet/AoihSUDyHU9igiu5TQZMF0adY0_QnXoR8L-Xwg8TMB_n",
-        ],
-      },
-      public: {
-        http: [
-          "https://lb.drpc.org/monad-testnet/AoihSUDyHU9igiu5TQZMF0adY0_QnXoR8L-Xwg8TMB_n",
-        ],
-      },
-    },
-    blockExplorers: {
-      default: { name: "MonadScan", url: "https://testnet.monadexplorer.com/" },
-    },
-    // any extra settings if needed (e.g. contract address for deployments)
-    // you might also need to add formatters or serializers, if viem requires them
-  });
-
-  const publicClient = createPublicClient({
-    chain: monadTestnet,
-    transport: http(`${import.meta.env.VITE_NETWORK_RPC}`),
-  });
-
-  const paymasterClient = createPaymasterClient({
-    transport: http(`${import.meta.env.VITE_BUNDLER_RPC}`),
-  });
-
   const replacer = (_key: string, value: any) => {
     return typeof value === "bigint" ? value.toString() : value;
   };
-
-  const bundlerClient = createBundlerClient({
-    chain: monadTestnet,
-    paymaster: paymasterClient,
-    transport: http(`${import.meta.env.VITE_BUNDLER_RPC}`),
-  });
 
   const ensureWallet = async () => {
     if (user && !user.wallet) {
@@ -144,11 +101,9 @@ const index: React.FC = () => {
       params: [],
     });
 
-    const feeData = await publicClient.estimateFeesPerGas();
+    setSmartAccount(smartAccount);
 
-    const maxFeePerGas = feeData.maxFeePerGas;
-    const maxPriorityFeePerGas = feeData.maxPriorityFeePerGas;
-
+    /*
     const userOperationHash = await bundlerClient.sendUserOperation({
       account: smartAccount,
       calls: [
@@ -160,7 +115,7 @@ const index: React.FC = () => {
       maxFeePerGas: gasPrice.standard.maxFeePerGas,
       maxPriorityFeePerGas: gasPrice.standard.maxPriorityFeePerGas,
       paymaster: paymasterClient,
-    });
+    });*/
 
     const userEmail = user?.email["address"];
 
