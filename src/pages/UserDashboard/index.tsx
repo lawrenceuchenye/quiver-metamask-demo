@@ -26,9 +26,8 @@ const Dashboard: React.FC = () => {
   const { user } = usePrivy();
   const setConnectClicked = useQuiverStore((state) => state.setConnectClicked);
   const navigate = useNavigate();
-  const [processedTxs, setProcessedTxs] = useState<string[]>([]);
-
-  const lastProcessedBlockRef = useRef<number>(0);
+  const lastProcessedBlockRefID = useRef<number>(0);
+  const booted = useRef<number>(0);
 
   // USDC Transfer event signature
 
@@ -36,80 +35,78 @@ const Dashboard: React.FC = () => {
     return Math.round(num * 100) / 100;
   };
 
-  const setUSDCBalListener = (targetAddress: string) => {
-    const provider = new JsonRpcProvider(`${import.meta.env.VITE_NETWORK_RPC}`);
-    const contract = new Contract(TA, erc20Abi, provider);
+  const GRAPHQL_URL = "https://70142595ea72.ngrok-free.app/v1/graphql";
 
-    let previousBalance: bigint;
-    let txHashes = JSON.parse(localStorage.getItem("txHashSession")) || [];
-
-    async function pollBalance() {
-      try {
-        const currentBalance: bigint = await contract.balanceOf(targetAddress);
-        if (previousBalance !== undefined) {
-          const diff = currentBalance - previousBalance;
-          if (diff > 0n) {
-            const filter = contract.filters.Transfer(null, targetAddress);
-            const currentBlock = await provider.getBlockNumber();
-            const fromBlock = currentBlock;
-            const events = await contract.queryFilter(
-              filter,
-              fromBlock,
-              currentBlock + 1
-            );
-
-            for (const event of events) {
-              if (!processedTxs.includes(event.transactionHash)) {
-                console.log(event.transactionHash);
-                setProcessedTxs([...processedTxs, event.transactionHash]);
-                useQuiverStore.getState().incrementRefreshCount();
-                toast.success(`${formatUnits(diff, 6)} USDC DEPOSITED`, {
-                  position: "top-right",
-                  autoClose: 5000,
-                  hideProgressBar: false,
-                  closeOnClick: true,
-                  pauseOnHover: true,
-                  draggable: true,
-                  progress: undefined,
-                  theme: "colored",
-                });
-                const sentAmnt: bigint = event?.args[2];
-                await axios.post(`${API_ENDPOINT}/api/create_tx/`, {
-                  type: "CashFlow",
-                  amount: formatUnits(sentAmnt, 6),
-                  from: event?.args[0],
-                  to: userData?.walletAddr,
-                });
-              } else {
-                console.log(processedTxs);
-                return;
-              }
-            }
-          } else if (diff < 0n) {
-            useQuiverStore.getState().incrementRefreshCount();
-            toast.error(`${formatUnits(diff * -1n, 6)} USDC DEBITTED`, {
-              position: "top-right",
-              autoClose: 5000,
-              hideProgressBar: false,
-              closeOnClick: true,
-              pauseOnHover: true,
-              draggable: true,
-              progress: undefined,
-              theme: "colored",
-            });
-            setIsPending(false);
-          }
-        } else {
-          console.log(
-            `🔍 Initial balance: ${formatUnits(currentBalance, 6)} tokens`
-          );
-        }
-        previousBalance = currentBalance;
-      } catch (error) {
-        console.log("Error polling balance!!!");
-      }
+  const fetchLatestTransfer = async (targetAddress: string) => {
+    try {
+      const query = `
+  query {
+    MonadUSDC_Transfer(
+      where: { _or: [
+        { from: { _eq: "${targetAddress}" } },
+        { to: { _eq: "${targetAddress}" } }
+      ] },
+      order_by: { block_number: desc },
+      limit: 1
+    ) {
+      id
+      from
+      to
+      value
+      block_number
+      timestamp
     }
-    return setInterval(pollBalance, 5000); // Poll every 2.5s
+  }
+`;
+
+      const res = await axios.post(GRAPHQL_URL, { query });
+      const transfer = res.data.data?.MonadUSDC_Transfer?.[0];
+
+      if (transfer) {
+        if (booted.current == 0) {
+          lastProcessedBlockRefID.current = transfer.block_number;
+          booted.current = 1;
+          return;
+        }
+
+        const lastBlock = lastProcessedBlockRefID.current;
+        if (lastBlock === transfer.block_number) return;
+        lastProcessedBlockRefID.current = transfer.block_number;
+
+        if (transfer.from == targetAddress) {
+          console.log(transfer);
+          toast.error(`-${transfer.value / 1000000} USDC DEBITTED`, {
+            position: "top-right",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+            theme: "colored",
+          });
+        }
+
+        if (transfer.to == targetAddress) {
+          toast.success(`+${transfer.value / 1000000} USDC DEPOSITED`, {
+            position: "top-right",
+            autoClose: 5000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
+            draggable: true,
+            progress: undefined,
+            theme: "colored",
+          });
+        }
+
+        incrementRefreshCount();
+      } else {
+        console.log("No transfer found.");
+      }
+    } catch (err) {
+      console.error("Error fetching latest transfer:", err.message);
+    }
   };
 
   const isVerified = async () => {
@@ -127,13 +124,13 @@ const Dashboard: React.FC = () => {
   };
 
   useEffect(() => {
-    const intervalId = setUSDCBalListener(
-      userData?.walletAddr ? userData?.walletAddr : "0x"
-    );
+    const intervalIDi = setInterval(() => {
+      fetchLatestTransfer(userData?.walletAddr ? userData?.walletAddr : "0x");
+    }, 3000);
 
     isVerified();
     return () => {
-      clearInterval(intervalId);
+      clearInterval(intervalIDi);
     };
   }, []);
 

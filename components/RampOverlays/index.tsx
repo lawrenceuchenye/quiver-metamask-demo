@@ -13,9 +13,7 @@ import { getClosestSent, getClosestText } from "../utils";
 import btnOverlayW from "../../src/assets/btnOverlayW.svg";
 import { API_ENDPOINT, hashStringSHA256, sendUserOpsTransfer } from "../utils";
 import { usePrivy } from "@privy-io/react-auth";
-import { getNames } from "@coinbase/onchainkit/identity";
 import { useWallets } from "@privy-io/react-auth";
-import { base } from "viem/chains";
 import JSEncrypt from "jsencrypt";
 import btnOverlay from "../../src/assets/btnOverlay.svg";
 
@@ -66,7 +64,7 @@ const OffRamp: React.FC = () => {
   const [recvBank, setRecvBank] = useState<string | null>(null);
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const [isSuccess, setIsSuccess] = useState<boolean>(false);
-  const [baseName, setBaseName] = useState<string | null>(null);
+
   const [amount, setAmount] = useState<number>(0);
   const incrementRefreshCount = useQuiverStore(
     (state) => state.incrementRefreshCount
@@ -257,17 +255,14 @@ const OffRamp: React.FC = () => {
       if (isEVMTarget) {
         setIsProcessing(true);
         const success = await sendUserOpsTransfer(targetID, amount, wallets);
-        if (success) {
-          setIsProcessing(false);
-          setIsPending(true);
-        } else {
+        console.log(success);
+
+        setTimeout(() => {
           setIsPending(false);
-          setTimeout(() => {
-            setIsProcessing(false);
-            setIsTxApproved(false);
-            setIsEVMTarget(false);
-          }, 3000);
-        }
+          setIsProcessing(false);
+          setIsTxApproved(false);
+          setIsEVMTarget(false);
+        }, 5000);
       } else {
       }
     }
@@ -328,22 +323,7 @@ const OffRamp: React.FC = () => {
     }
   };
 
-  const resolveWalletAddrENS = async () => {
-    console.log("Names");
-    const addresses = [targetID];
-    const names = await getNames({ addresses, chain: base });
-    if (names[0]) {
-      setBaseName(names[0]);
-    }
-  };
-
   useEffect(() => {
-    setBaseName(null);
-    if (targetID) {
-      if (isEVMAddr(targetID)) {
-        resolveWalletAddrENS();
-      }
-    }
     setRecvBank(null);
   }, [targetID]);
 
@@ -391,7 +371,7 @@ const OffRamp: React.FC = () => {
             >
               <b style={{ textTransform: "uppercase" }}>Recipient:</b>{" "}
               <div className="walletAddressTag">
-                <p>{baseName ? baseName : sformatWalletAddress(targetID)}</p>
+                <p>{sformatWalletAddress(targetID)}</p>
               </div>
             </div>
             <div
@@ -411,9 +391,7 @@ const OffRamp: React.FC = () => {
                   margin: "0 35px",
                 }}
               >
-                <p>
-                  <i className="fa-solid fa-stop"></i> MONAD
-                </p>
+                <p>MONAD</p>
               </div>
             </div>
           </div>
