@@ -153,23 +153,9 @@ const UserMoneyCard: React.FC = () => {
                 : "****"}{" "}
               USDC
             </h3>
-            <m.i
-              animate={{ rotate: spinCount * 360 }}
-              transition={{
-                repeat: 1, // 2 repeats + initial = 3 spins
-                duration: 0.8, // each spin = 1.5s
-                ease: "linear",
-              }}
-              onClick={() => {
-                setSpinCount((c) => c + 1);
-                getUSDBal(); // retrigger spin
-              }}
-              whileTap={{ scale: 1.2 }}
-              className="fa fa-refresh refreshIcon"
-            ></m.i>
           </>
 
-          <h3 style={{ textTransform: "uppercase" }}>Base</h3>
+          <h3 style={{ textTransform: "uppercase" }}>MONAD</h3>
         </div>
         <h2>
           {formatWalletAddress(userData?.walletAddr)}{" "}
