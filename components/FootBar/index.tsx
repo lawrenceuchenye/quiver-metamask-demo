@@ -31,7 +31,7 @@ const index: React.FC = () => {
         <h3>Whatsapp</h3>
       </div>
       <div className="copyrightContainer">
-        <h1>© 2025 QUIVER EDGE SERVICES LTD | RC:8707357</h1>
+        <h1>© 2025 QUIVER</h1>
       </div>
     </div>
   );
