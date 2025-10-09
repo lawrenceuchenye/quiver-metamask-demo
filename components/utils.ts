@@ -23,7 +23,7 @@ import {
 } from "@metamask/delegation-toolkit";
 const chain = base;
 
-const CA = "0x1d8b0d97900319aE0778cE45D67eA45cDaBF602B"; //"0x1d8b0d97900319aE0778cE45D67eA45cDaBF602B";
+const CA = "0x84B80AF2Dab6c148CC9f61c9fae9fabB5a5975b8"; //"0x1d8b0d97900319aE0778cE45D67eA45cDaBF602B";
 const TA = "0xf817257fed379853cDe0fa4F97AB987181B1E5Ea";
 const API_ENDPOINT = "https://twiddlemart.com";
 const FEE_1 = 0.05;
