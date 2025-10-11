@@ -15,6 +15,8 @@ import btnOverlayW from "../../src/assets/btnOverlayW.svg";
 import { toast } from "react-toastify";
 import cardBg from "../../src/assets/cardBg.svg";
 import { useLocation, useNavigate } from "react-router-dom";
+import ChatComponent from "../ChatComponent";
+
 
 const abbreviateNumber = (value, decimals = 2) => {
   if (value === 0) return "0";
@@ -184,7 +186,7 @@ const UserMoneyCard: React.FC = () => {
               class="fa-solid fa-bell"
               whileTap={{ scale: 1.2 }}
               onClick={() => {
-                toast.error("ONLY USDC ON BASE SUPPORTED", {
+                toast.error("ONLY USDC ON MONAD SUPPORTED", {
                   position: "top-right",
                   autoClose: 5000,
                   hideProgressBar: false,
@@ -326,7 +328,10 @@ const index: React.FC = () => {
         <div className="utilsContainer">
           <UserMoneyCard />
           <UserActionsContainer />
+       
+            
         </div>
+         <ChatComponent />
       </div>
     </div>
   );

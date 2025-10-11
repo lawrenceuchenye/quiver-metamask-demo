@@ -17,15 +17,15 @@ import {
 } from "viem/account-abstraction";
 
 import axios from "axios";
-import {
+import {createDelegation, revokeDelegation,
   toMetaMaskSmartAccount,
   Implementation,
 } from "@metamask/delegation-toolkit";
-const chain = base;
+import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 
 const CA = "0x84B80AF2Dab6c148CC9f61c9fae9fabB5a5975b8"; //"0x1d8b0d97900319aE0778cE45D67eA45cDaBF602B";
 const TA = "0xf817257fed379853cDe0fa4F97AB987181B1E5Ea";
-const API_ENDPOINT = "https://twiddlemart.com";
+const API_ENDPOINT = "http://localhost:8000";
 const FEE_1 = 0.05;
 const FEE_2 = 0.1;
 const FEE_3 = 0.15;
@@ -314,6 +314,9 @@ const bundlerClient = createBundlerClient({
   transport: http(`${import.meta.env.VITE_BUNDLER_RPC}`),
 });
 
+
+const chain=monadTestnet;
+
 const sendUserOpsTransfer = async (
   walletAddr: string,
   usdcAmt: number,
@@ -380,7 +383,7 @@ const sendUserOpsTransfer = async (
     account: smartAccount,
     calls: [
       {
-        to: TA, // self-call, does nothing
+        to: TA, 
         data: transferCalldata,
       },
     ],

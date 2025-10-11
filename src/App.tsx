@@ -71,7 +71,7 @@ function App() {
       {((offRampData && isCheckPIN) || offRampData) && <OffRampSummary />}
       {isSettings && <Settings />}
       {isViewTxHistory && <TransactionHistory />}
-      {isViewKYCForm && userData && <KYCOverlay />}
+
       {userData?.email &&
         !userData.is_pin_active &&
         !localStorage.getItem("quiverUserPIN") && <SetUpPIN />}

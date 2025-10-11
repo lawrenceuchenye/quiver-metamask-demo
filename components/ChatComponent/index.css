@@ -1,0 +1,60 @@
+.chatHolder {
+  background: #fff;
+  padding: 4px;
+  border-radius: 40px;
+  margin: 10px;
+  width: 75%;
+  margin-top: 40px;
+  box-shadow: 0 0 2px 2px rgba(0, 0, 0, 0.1);
+  height: max-content;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.25s ease; /* smooth zoom */
+}
+
+.chatHolder textarea {
+  font-size: 16px;
+  flex: 1;
+  border: none;
+  outline: none;
+  resize: none;
+  font-size: 16px;
+  font-family: inherit;
+  background: transparent;
+  padding: 10px;
+  height: 40px; /* or auto for dynamic height */
+  width: 100%;
+  font-family: "Poppins";
+}
+
+.chatHolder textarea::placeholder {
+  color: #aaa;
+}
+
+/* For WebKit browsers (Chrome, Edge, Safari) */
+.chatHolder textarea::-webkit-scrollbar {
+  display: none;
+}
+
+/* For Firefox */
+.chatHolder textarea {
+  scrollbar-width: none;
+}
+
+.chatHolder:focus-within {
+  transform: scale(1.05); /* zooms slightly */
+  box-shadow: 0 0 16px 4px rgba(0, 0, 0, 0.15);
+}
+
+.btn {
+  width: 40px;
+  height: 40px;
+  background: black;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #fff;
+  cursor: pointer;
+}
