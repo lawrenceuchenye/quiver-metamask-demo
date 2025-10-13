@@ -1,120 +1,45 @@
-.chatOverlay {
-  background: rgba(0, 0, 0, 0.2);
-  width: 100%;
-  height: 100%;
-  position: absolute;
-  top: 0;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 20;
-  position: fixed;
-}
-
 .chatContainer {
-  width: 60%;
-  height: max-content;
-  min-height: 400px;
+  width: 77%;
   background: #fff;
-  border-radius: 30px;
-  box-shadow: 0 2px 4px 2px rgba(0, 0, 0, 0.1);
-  position: relative;
+  border-radius: 36px;
+  height: 275px;
+  top: 0;
+  position: absolute;
+  z-index: 10;
+  box-shadow: 0 0 2px 2px rgba(245, 229, 229, 0.1);
+  margin-left: -4px;
+  padding: 10px 15px;
   overflow: hidden;
-  padding: 25px 10px;
-}
-
-.chats {
-  height: 320px;
-  border-radius: 30px 30px 0 0;
-  padding: 10px;
   overflow-y: scroll;
 }
 
-/* For Chrome, Edge, Safari */
-.chats::-webkit-scrollbar {
-  width: 4px; /* thin scrollbar */
+/* Chrome, Edge, Safari scrollbar */
+.chatContainer::-webkit-scrollbar {
+  width: 4px; /* width of the scrollbar */
 }
 
-.chats::-webkit-scrollbar-thumb {
-  background-color: #555; /* dark grey thumb */
-  border-radius: 2px;
+.chatContainer::-webkit-scrollbar-track {
+  background: transparent; /* track background */
+  border-radius: 10px;
 }
 
-.chats::-webkit-scrollbar-track {
-  background: transparent; /* optional, can be set */
-  overflow: hidden;
+.chatContainer::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2); /* color of scrollbar */
+  border-radius: 4px;
+  transition: background 0.3s;
+}
+
+.chatContainer::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.35); /* darker on hover */
 }
 
 .chat {
-  max-width: 75%;
-  padding: 8px 12px;
-  background: oklch(87.2% 0.01 258.338);
+  margin-top: 10px;
+  background: oklch(87% 0 0);
   width: max-content;
-  border-radius: 18px;
-  font-size: 14px;
+  max-width: 60%;
+  padding: 10px;
+  border-radius: 32px;
   font-family: "Poppins";
-  margin-bottom: 10px;
-  margin-left: auto;
-}
-
-.inputContainer {
-  position: absolute;
-  bottom: 0px;
-  width: 100%;
-  display: flex;
-  justify-content: space-between;
-  align-items: end;
-  
-}
-
-.inputContainer input {
-  width: 80%;
-  padding: 12px 8px; /* vertical padding for centering */
-  border-radius: 8px;
-  border: 1px solid hsl(0, 0%, 18%);
-  outline: none;
-  font-family: "Poppins";
-  margin-right: 10%;
-  background: oklch(96.8% 0.007 247.896);
-  border-radius: 50px;
-}
-
-.inputContainer button {
-  width: 12%;
-  border-radius: 50px;
-  padding: 10px 8px;
-  margin: 10px;
-  margin-left: 0;
-  background: #000;
-  color: #fff;
-  cursor: pointer;
-}
-
-.exit-info {
-  position: absolute;
-  bottom: 80px;
-  width: 100%;
-  display: flex;
-  justify-content: left;
-  align-items: end;
-  font-family: "Poppins";
-  margin-left: 15px;
-  color: oklch(70.7% 0.022 261.325);
-}
-
-@media (max-width: 1200px) {
-  .chatOverlay {
-    align-items: end;
-  }
-
-  .chatContainer {
-    width: 100%;
-    min-height: 400px;
-    max-height: 600px;
-    border-radius: 30px 30px 0 0;
-  }
-  .chats {
-    min-height: 320px;
-    max-width: 500px;
-  }
+  font-size: 15px;
 }

@@ -6,7 +6,6 @@ import { API_ENDPOINT } from "../../../components/utils";
 import UserOverview from "../../../components/UserOverview";
 import UserFinanceInfo from "../../../components/UserFinanceInfo";
 
-
 import { JsonRpcProvider, Contract, formatUnits } from "ethers";
 import { TA } from "../../../components/utils";
 import { erc20Abi } from "viem";
@@ -37,7 +36,7 @@ const Dashboard: React.FC = () => {
     return Math.round(num * 100) / 100;
   };
 
-  const GRAPHQL_URL = "https://70142595ea72.ngrok-free.app/v1/graphql";
+  const GRAPHQL_URL = "http://localhost:8080/v1/graphql";
 
   const fetchLatestTransfer = async (targetAddress: string) => {
     try {
@@ -76,7 +75,7 @@ const Dashboard: React.FC = () => {
         lastProcessedBlockRefID.current = transfer.block_number;
 
         if (transfer.from == targetAddress) {
-          console.log(transfer);
+          incrementRefreshCount();
           toast.error(`-${transfer.value / 1000000} USDC DEBITTED`, {
             position: "top-right",
             autoClose: 5000,
@@ -90,6 +89,7 @@ const Dashboard: React.FC = () => {
         }
 
         if (transfer.to == targetAddress) {
+          incrementRefreshCount();
           toast.success(`+${transfer.value / 1000000} USDC DEPOSITED`, {
             position: "top-right",
             autoClose: 5000,
@@ -101,8 +101,6 @@ const Dashboard: React.FC = () => {
             theme: "colored",
           });
         }
-
-        incrementRefreshCount();
       } else {
         console.log("No transfer found.");
       }

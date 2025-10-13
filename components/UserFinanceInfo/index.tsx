@@ -16,7 +16,7 @@ import { toast } from "react-toastify";
 import cardBg from "../../src/assets/cardBg.svg";
 import { useLocation, useNavigate } from "react-router-dom";
 import ChatComponent from "../ChatComponent";
-
+import ChatContainer from "../ChatContainer";
 
 const abbreviateNumber = (value, decimals = 2) => {
   if (value === 0) return "0";
@@ -82,6 +82,7 @@ const erc20Abi = parseAbi([
 
 const UserMoneyCard: React.FC = () => {
   const setIsSettings = useQuiverStore((state) => state.setIsSettings);
+
   const userData = useQuiverStore((state) => state.userData);
   const reFreshCount = useQuiverStore((state) => state.reFreshCount);
   const [usdcBal, setUSDCBal] = useState<number | null>();
@@ -266,6 +267,7 @@ const Service: React.FC<ServiceProps> = ({
 
 const UserActionsContainer: React.FC = () => {
   const setIsTransfer = useQuiverStore((state) => state.setIsTransfer);
+  const isAgentModeActive = useQuiverStore((state) => state.isAgentModeActive);
 
   return (
     <div className="userActionsContainer">
@@ -321,6 +323,7 @@ const UserActionsContainer: React.FC = () => {
 };
 
 const index: React.FC = () => {
+  const isAgentModeActive = useQuiverStore((state) => state.isAgentModeActive);
   return (
     <div className="infoHolder">
       <div className="uf-Header"></div>
@@ -328,10 +331,9 @@ const index: React.FC = () => {
         <div className="utilsContainer">
           <UserMoneyCard />
           <UserActionsContainer />
-       
-            
         </div>
-         <ChatComponent />
+        {isAgentModeActive && <ChatContainer />}
+        <ChatComponent />
       </div>
     </div>
   );

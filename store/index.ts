@@ -87,6 +87,11 @@ interface offRampData {
   bankName: string;
 }
 
+interface context {
+  isUser: boolean;
+  query: string;
+}
+
 interface QuiverState {
   userData: UserData | null;
   billBatch: (Airtime | Data | Electricity | Cable | null)[];
@@ -115,9 +120,14 @@ interface QuiverState {
   isChangeCardColor: boolean;
   isViewBatch: boolean;
   smartAccount: any;
+  isAgentModeActive: boolean;
+  setAgentMondeActive: (_active: boolean) => void;
   setBillBatch: (
     _batch: (Airtime | Data | Electricity | Cable | null)[]
   ) => void;
+  chatContext: context[];
+  setChatContext: (_chat: context) => void;
+  resetChatContext: () => void;
   setIsChangeCardColor: (_isChangeCardColor: boolean) => void;
   setIsDisablingPIN: (txApproved: boolean) => void;
   setIsViewBatch: (_viewBatch: boolean) => void;
@@ -171,6 +181,17 @@ const useQuiverStore = create<QuiverState>((set) => ({
   isViewBatch: false,
   billBatch: null,
   smartAccount: null,
+  isAgentModeActive: false,
+  chatContext: [],
+  setChatContext: (_chat: context) => {
+    set((state) => ({ chatContext: [...state.chatContext, _chat] }));
+  },
+  resetChatContext: () => {
+    set(() => ({ chatContext: [] }));
+  },
+  setAgentMondeActive: (_active: boolean) => {
+    set(() => ({ isAgentModeActive: _active }));
+  },
   setSmartAcount: (_smartAccount: any) => {
     set(() => ({ smartAccount: _smartAccount }));
   },

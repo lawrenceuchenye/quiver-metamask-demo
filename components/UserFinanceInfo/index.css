@@ -1,6 +1,7 @@
 .infoHolder {
   text-align: left;
   width: 70%;
+  position: relative;
 }
 
 .infoHolder h1 {

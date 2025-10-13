@@ -396,6 +396,72 @@ const sendUserOpsTransfer = async (
   return true;
 };
 
+
+const initChat=async(privyWallets)=>{
+
+const embeddedWallet_ = await privyWallets.find(
+  (wallet) => wallet.walletClientType === "privy"
+);
+
+console.log(embeddedWallet_);
+const privyProvider = await embeddedWallet_.getEthereumProvider();
+const walletClient = createWalletClient({
+  chain: monadTestnet,
+  transport: custom(privyProvider),
+});
+
+// get the connected account
+const [address] = await walletClient.getAddresses();
+
+const smartAccountSigner = await providerToSmartAccountSigner(privyProvider);
+
+const privyAccount = {
+  ...smartAccountSigner, // ✅ this already has signMessage, signTypedData, signUserOperation
+  address, // make sure address is set correctly
+  type: "json-rpc", // delegation toolkit expects this
+};
+
+const smartAccount = await toMetaMaskSmartAccount({
+  client: publicClient,
+  implementation: Implementation.Hybrid,
+  deployParams: [address, [], [], []],
+  deploySalt: "0x",
+  signer: { account: privyAccount },
+});
+
+  const agentWallet = ethers.Wallet.createRandom(); // ephemeral; createRandom() returns { address, privateKey }
+  const aiAgentAddress = agentWallet.address;
+  const aiAgentPrivateKey = agentWallet.privateKey;
+
+  // For clarity / dev only:
+  console.log("AI agent created (DEV ONLY) address:", aiAgentAddress);
+  // NEVER console.log(privateKey) in production
+  console.log("AI agent privateKey (dev only) — store securely:", aiAgentPrivateKey);
+
+
+const delegation = createDelegation({
+  to: smartAccount.address, // This example uses a delegate smart account
+  from: smartAccount.address,
+  environment:smartAccount.environment,
+  scope: {
+    type: "erc20TransferAmount",
+     tokenAddress:"0xf817257fed379853cDe0fa4F97AB987181B1E5Ea",
+    maxAmount: 1000000n,
+  },
+});
+
+const signature = await smartAccount.signDelegation({
+  delegation,
+})
+
+const signedDelegation = {
+  ...delegation,
+  signature,
+}
+
+return { smartAccount,agentWallet}
+}
+
 export {
   saveSession,
   loadState,
@@ -410,6 +476,7 @@ export {
   getClosestSent,
   getClosestText,
   monadTestnet,
+  initChat,
   TA,
   API_ENDPOINT,
   FEE_1,
