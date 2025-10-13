@@ -27,7 +27,7 @@ const index = () => {
       setPrompt("");
       setIsProcessing(true);
       const res = await axios.post(`${API_ENDPOINT}/api/parse_user_intent/`, {
-        intent: `user request -${prompt} user usdc balance${usdcBal} user wallet address:${userData.walletAddr} chain:monad testnet`,
+        intent: `user query -${prompt} user usdc balance${usdcBal} user wallet address:${userData.walletAddr} chain:monad testnet`,
       });
       console.log(res.data.res);
       setChatContext({ isUser: false, query: res.data.res.response });
