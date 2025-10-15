@@ -3,13 +3,16 @@ import { motion as m } from "framer-motion";
 import "./index.css";
 import useQuiverStore from "../../store";
 import axios from "axios";
-import { API_ENDPOINT, sendUserOpsTransfer,initChat } from "../utils";
+import { API_ENDPOINT, sendUserOpsTransfer,initChat,sendTransferWithDelegation,TA } from "../utils";
 import { useWallets } from "@privy-io/react-auth";
 
 const index = () => {
   const ref = useRef(null);
   const setAgentModeActive = useQuiverStore(
     (state) => state.setAgentMondeActive
+  );
+  const  isAgentModeActive = useQuiverStore(
+    (state) => state.isAgentModeActive
   );
   const [prompt, setPrompt] = useState<string>("");
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
@@ -56,7 +59,6 @@ const index = () => {
     const onFocus = () => setAgentModeActive(true);
     el.addEventListener("focus", onFocus);
 
-    console.log(initChat(wallets));
     resetChatContext();
     setChatContext({
       isUser: false,
@@ -66,6 +68,18 @@ const index = () => {
       el.removeEventListener("focus", onFocus);
     };
   }, []);
+
+  const getDelegationInfo=async()=>{
+    if( isAgentModeActive){
+      const { smartAccount,agentAccount,signedDelegation}=await initChat(wallets);
+      sendTransferWithDelegation(smartAccount,agentAccount,signedDelegation,"0x48Ea1279d1A299Dc1B29d54603ca52A7eC42259f",1,TA)
+      console.log(smartAccount,agentAccount,signedDelegation);
+      }
+  }
+
+  useEffect(()=>{
+  getDelegationInfo();
+  },[isAgentModeActive])
 
   return (
     <div className="chatHolder">

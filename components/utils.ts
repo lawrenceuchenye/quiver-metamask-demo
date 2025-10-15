@@ -20,8 +20,13 @@ import axios from "axios";
 import {createDelegation, revokeDelegation,
   toMetaMaskSmartAccount,
   Implementation,
+  createExecution,
+  getDeleGatorEnvironment,
+  ExecutionMode, 
 } from "@metamask/delegation-toolkit";
+import { DelegationManager } from "@metamask/delegation-toolkit/contracts";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
+import { encodeFunctionData,zeroAddress } from "viem";
 
 const CA = "0x84B80AF2Dab6c148CC9f61c9fae9fabB5a5975b8"; //"0x1d8b0d97900319aE0778cE45D67eA45cDaBF602B";
 const TA = "0xf817257fed379853cDe0fa4F97AB987181B1E5Ea";
@@ -439,14 +444,25 @@ const smartAccount = await toMetaMaskSmartAccount({
   console.log("AI agent privateKey (dev only) — store securely:", aiAgentPrivateKey);
 
 
+const agentWalletInfo=privateKeyToAccount(agentWallet.privateKey);
+
+const agentAccount = await toMetaMaskSmartAccount({
+  client: publicClient,
+  implementation: Implementation.Hybrid, // Hybrid smart account
+  deployParams: [agentWalletInfo.address, [], [], []],
+  deploySalt: "0x",
+  signer: { account:  agentWalletInfo },
+})
+
+
 const delegation = createDelegation({
-  to: smartAccount.address, // This example uses a delegate smart account
+  to: agentAccount.address, // This example uses a delegate smart account
   from: smartAccount.address,
   environment:smartAccount.environment,
   scope: {
     type: "erc20TransferAmount",
-     tokenAddress:"0xf817257fed379853cDe0fa4F97AB987181B1E5Ea",
-    maxAmount: 1000000n,
+    tokenAddress:"0xf817257fed379853cDe0fa4F97AB987181B1E5Ea", //MONAD USDC
+    maxAmount: 10000000n,
   },
 });
 
@@ -459,14 +475,95 @@ const signedDelegation = {
   signature,
 }
 
-return { smartAccount,agentWallet}
+
+return { smartAccount,agentAccount,signedDelegation};
 }
+
+
+const sendTransferWithDelegation = async (
+  smartAccount,
+  agentWallet,
+  signedDelegation,
+  toAddress,
+  amount,
+  tokenAddress,
+) => {
+
+  console.log(agentWallet);
+ 
+  // 2️⃣ Encode ERC20 transfer data
+  const transferData = encodeFunctionData({
+    abi: [
+      {
+        name: "transfer",
+        type: "function",
+        stateMutability: "nonpayable",
+        inputs: [
+          { name: "to", type: "address" },
+          { name: "amount", type: "uint256" },
+        ],
+        outputs: [{ name: "", type: "bool" }],
+      },
+    ],
+    functionName: "transfer",
+    args: [toAddress, parseUnits(`${amount}`,6)],
+  });
+
+  
+  const executions_ = 
+    createExecution({
+      target: tokenAddress,
+      value: 0n,
+      data: transferData,
+    });
+
+  
+   
+  
+    // 3️⃣ Encode redeemDelegations call
+    const redeemDelegationCalldata = DelegationManager.encode.redeemDelegations({
+      delegations: [[signedDelegation]],
+      modes: [ExecutionMode.SingleDefault],
+      executions:[executions_],
+    });
+  
+    // 4️⃣ Get DelegationManager contract for this chain
+    const env = getDeleGatorEnvironment(monadTestnet.id);
+
+    const gasPriceResponse = await bundlerClient.request({
+      method: "pimlico_getUserOperationGasPrice",
+      params: [],
+    });
+  
+    const maxFeePerGas = BigInt(gasPriceResponse.standard.maxFeePerGas);
+    const maxPriorityFeePerGas = BigInt(
+      gasPriceResponse.standard.maxPriorityFeePerGas
+    );
+
+    console.log(agentWallet);
+    const agentOperationHash = await bundlerClient.sendUserOperation({
+      account: agentWallet,
+      calls: [
+        {
+          to: agentWallet.address,
+          data: redeemDelegationCalldata,
+        },
+      ],
+      maxFeePerGas: maxFeePerGas,
+      maxPriorityFeePerGas: maxPriorityFeePerGas,
+    });
+
+  console.log("✅ Delegated transfer sent:", agentOperationHash);
+  return true;
+};
+
 
 export {
   saveSession,
   loadState,
   publicClient,
   sendUserOpsTransfer,
+  sendTransferWithDelegation,
   paymasterClient,
   bundlerClient,
   CA,

@@ -1,57 +1,57 @@
-# React + TypeScript + Vite
+Quiver
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Quiver is a stablecoin-powered dApp that enables users across West Africa to pay for utilities, shop, and access financial services on-chain using USDC — all with a seamless, Web2-like experience.
 
-Currently, two official plugins are available:
+🚀 Overview
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+Quiver makes it easy for anyone to come on-chain, pay bills, and spend crypto like cash.
+Built on Monad, Quiver combines powerful account abstraction and smart indexing to make stablecoins truly usable in everyday life.
 
-## Expanding the ESLint configuration
+⚙️ Key Features
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+💰 Stablecoin Payments:
+Pay for airtime, electricity, and other utilities directly using USDC.
 
-```js
-export default tseslint.config({
-  extends: [
-    // Remove ...tseslint.configs.recommended and replace with this
-    ...tseslint.configs.recommendedTypeChecked,
-    // Alternatively, use this for stricter rules
-    ...tseslint.configs.strictTypeChecked,
-    // Optionally, add this for stylistic rules
-    ...tseslint.configs.stylisticTypeChecked,
-  ],
-  languageOptions: {
-    // other options...
-    parserOptions: {
-      project: ['./tsconfig.node.json', './tsconfig.app.json'],
-      tsconfigRootDir: import.meta.dirname,
-    },
-  },
-})
-```
+🔐 Seamless Onboarding:
+Powered by MetaMask Smart Accounts and Privy, Quiver offers a smooth, passwordless Web2-style experience for new users.
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+⚡ Fast On & Off-Ramping:
+Instantly convert between fiat and crypto — no risky P2P or centralized exchange delays.
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+🧠 Smart Escrow Contracts:
+Utility payments are held in escrow and refunded automatically if a purchase fails.
 
-export default tseslint.config({
-  plugins: {
-    // Add the react-x and react-dom plugins
-    'react-x': reactX,
-    'react-dom': reactDom,
-  },
-  rules: {
-    // other rules...
-    // Enable its recommended typescript rules
-    ...reactX.configs['recommended-typescript'].rules,
-    ...reactDom.configs.recommended.rules,
-  },
-})
-```
-# quiverpa_fe
-# quiver-metamask-demo
-# quiver-metamask-demo
+🔍 Real-Time Transaction Tracking:
+Integrated with Envio Indexer to monitor user deposits and withdrawals on-chain.
+→ View Envio Indexer on GitHub
+
+🏗️ Tech Stack
+
+Blockchain: Monad
+
+Stablecoin: USDC
+
+Account Abstraction: MetaMask Smart Account
+
+User Onboarding: Privy
+
+Indexing: Envio Indexer https://github.com/lawrenceuchenye/quiver-indexer
+
+Smart Contracts: Custom Quiver escrow contract https://testnet.monadexplorer.com/address/0x84B80AF2Dab6c148CC9f61c9fae9fabB5a5975b8
+
+Frontend: React + TypeScript
+
+🌍 Mission
+
+Quiver helps people in West Africa use crypto for real-world transactions —
+from paying for electricity to shopping at the market — without worrying about complex wallets or unsafe P2P trades.
+
+🧩 Architecture (Simplified)
+User → MetaMask Smart Account + Privy
+     ↓
+Quiver Escrow Contract (USDC)
+     ↓
+Envio Indexer (Deposit/Withdrawal Detection)
+     ↓
+Utility Vendor / Market Payment
+
