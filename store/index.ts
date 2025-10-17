@@ -87,9 +87,10 @@ interface offRampData {
   bankName: string;
 }
 
-interface context {
-  isUser: boolean;
-  query: string;
+interface tokenTransferContext {
+  amount:number;
+  from:string;
+  to:string;
 }
 
 interface QuiverState {
@@ -121,6 +122,10 @@ interface QuiverState {
   isViewBatch: boolean;
   smartAccount: any;
   isAgentModeActive: boolean;
+  tokenTransferContext:tokenTransferContext | null;
+  fiattoUSDPrice:number|null;
+  setFiatToUSDPrice:(price:number)=>void;
+  setTokenTransferContext:(amount:number,to:string,from:string)=>void;
   setAgentMondeActive: (_active: boolean) => void;
   setBillBatch: (
     _batch: (Airtime | Data | Electricity | Cable | null)[]
@@ -161,6 +166,7 @@ const useQuiverStore = create<QuiverState>((set) => ({
   billType: null,
   isPay: false,
   billInfo: [null],
+
   isStake: false,
   isStaked: false,
   usdcBal: 0,
@@ -183,6 +189,14 @@ const useQuiverStore = create<QuiverState>((set) => ({
   smartAccount: null,
   isAgentModeActive: false,
   chatContext: [],
+  tokenTransferContext:null,
+  fiattoUSDPrice:null,
+  setFiatToUSDPrice:(price:number)=>{
+      set(() => ({ fiattoUSDPrice:price }));
+  },
+  setTokenTransferContext:(tokenTransferData:tokenTransferContext)=>{
+      set(() => ({ tokenTransferContext: tokenTransferData }));
+  },
   setChatContext: (_chat: context) => {
     set((state) => ({ chatContext: [...state.chatContext, _chat] }));
   },

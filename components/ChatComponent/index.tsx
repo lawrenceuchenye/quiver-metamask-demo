@@ -3,7 +3,13 @@ import { motion as m } from "framer-motion";
 import "./index.css";
 import useQuiverStore from "../../store";
 import axios from "axios";
-import { API_ENDPOINT, sendUserOpsTransfer,initChat,sendTransferWithDelegation,TA } from "../utils";
+import {
+  API_ENDPOINT,
+  sendUserOpsTransfer,
+  sendTransferWithDelegation,
+  TA,
+  CA
+} from "../utils";
 import { useWallets } from "@privy-io/react-auth";
 
 const index = () => {
@@ -11,15 +17,27 @@ const index = () => {
   const setAgentModeActive = useQuiverStore(
     (state) => state.setAgentMondeActive
   );
-  const  isAgentModeActive = useQuiverStore(
-    (state) => state.isAgentModeActive
-  );
+  const isAgentModeActive = useQuiverStore((state) => state.isAgentModeActive);
   const [prompt, setPrompt] = useState<string>("");
+  const [contextUpdated,setContextUpdated]=useState<boolean>(false);
+  const [pricingData,setPricingData]=useState<number>(0);
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
   const setChatContext = useQuiverStore((state) => state.setChatContext);
   const resetChatContext = useQuiverStore((state) => state.resetChatContext);
-  const usdcBal=useQuiverStore((state)=>state.usdcBal);
-  const userData=useQuiverStore((state)=>state.userData);
+  const usdcBal = useQuiverStore((state) => state.usdcBal);
+  const userData = useQuiverStore((state) => state.userData);
+  const tokenTransferContext=useQuiverStore((state)=>state.tokenTransferContext);
+
+  const getPrice = async () => {
+    try {
+      const res = await axios.get(
+        `${import.meta.env.VITE_NGN_USDC_RATE_ENDPOINT}`
+      );
+      setPricingData(res.data.data);
+    } catch (e) {
+
+    }
+  };
 
   const { wallets } = useWallets();
 
@@ -30,12 +48,19 @@ const index = () => {
       setPrompt("");
       setIsProcessing(true);
       const res = await axios.post(`${API_ENDPOINT}/api/parse_user_intent/`, {
-        intent: `user query -${prompt} user usdc balance${usdcBal} user wallet address:${userData.walletAddr} chain:monad testnet`,
+        intent:`exchangeRate:${pricingData} ${prompt}`,
+        usdcBal:usdcBal,
+        userWallet:userData.walletAddr,
+        to:tokenTransferContext ? tokenTransferContext.to :  null,
+        from:tokenTransferContext ? tokenTransferContext.from : null,
+        amount:tokenTransferContext ? tokenTransferContext.amount : null,
+        
       });
       console.log(res.data.res);
+     
       setChatContext({ isUser: false, query: res.data.res.response });
-      if (res.data.res.type == "transfer") {
-        if(usdcBal <   res.data.res.amount){
+      if (res.data.res.type == "transfer" || res.data.res.type == "approval" ) {
+        if (usdcBal < res.data.res.amount) {
           setIsProcessing(false);
           return;
         }
@@ -44,32 +69,47 @@ const index = () => {
           res.data.res.amount,
           wallets
         );
-        setChatContext({
-          isUser: false,
-          query: `Transfer of ${res.data.res.amount} USDC to  ${res.data.res.to} Successful`,
-        });
+      
       }
       setIsProcessing(false);
+
+      if (res.data.res.type == "airtime") {
+        if (usdcBal < res.data.res.amount) {
+          setIsProcessing(false);
+          return;
+        }
+        await sendUserOpsTransfer(
+         CA,
+          res.data.res.amount,
+          wallets
+        );
+      
+      }
+    
     }
+
+    
+
+    
   };
+
+ 
 
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
     const onFocus = () => setAgentModeActive(true);
     el.addEventListener("focus", onFocus);
-
+    getPrice();
     resetChatContext();
-    setChatContext({
-      isUser: false,
-      query: `You have allocated a spend limit of 50 USDC to your ai agent for this session`,
-    });
+  
+    setContextUpdated(false);
     return () => {
       el.removeEventListener("focus", onFocus);
     };
   }, []);
 
-  const getDelegationInfo=async()=>{
+  /*const getDelegationInfo=async()=>{
     if( isAgentModeActive){
       const { smartAccount,agentAccount,signedDelegation}=await initChat(wallets);
       sendTransferWithDelegation(smartAccount,agentAccount,signedDelegation,"0x48Ea1279d1A299Dc1B29d54603ca52A7eC42259f",1,TA)
@@ -77,10 +117,11 @@ const index = () => {
       }
   }
 
+  
   useEffect(()=>{
   getDelegationInfo();
   },[isAgentModeActive])
-
+*/
   return (
     <div className="chatHolder">
       <textarea
@@ -100,12 +141,12 @@ const index = () => {
           setChatContext({ isUser: true, query: prompt });
           setPrompt("");
           setIsProcessing(true);
-          const res = await axios.post(
-            `${API_ENDPOINT}/api/parse_user_intent/`,
-            {
-              intent: prompt,
-            }
-          );
+         
+           const res = await axios.post(`${API_ENDPOINT}/api/parse_user_intent/`, {
+        intent:prompt,
+        usdcBal:usdcBal,
+        userWallet:userData.walletAddr
+      });
           console.log(res);
           setIsProcessing(false);
         }}
@@ -123,6 +164,7 @@ const index = () => {
         onClick={() => {
           setAgentModeActive(false);
           setIsProcessing(false);
+          setContextUpdated(false);
           resetChatContext();
         }}
       >

@@ -22,6 +22,11 @@ const Dashboard: React.FC = () => {
   const incrementRefreshCount = useQuiverStore(
     (state) => state.incrementRefreshCount
   );
+
+  const setTokenTransferContext=useQuiverStore((state)=>state.setTokenTransferContext);
+  const setChatContext=useQuiverStore((state)=>state.setChatContext);
+  const isAgentModeActive=useQuiverStore((state)=>state.isAgentModeActive);
+
   const setIsPending = useQuiverStore((state) => state.setIsPending);
   const setIsViewKYCForm = useQuiverStore((state) => state.setIsViewKYCForm);
   const { user } = usePrivy();
@@ -63,19 +68,26 @@ const Dashboard: React.FC = () => {
       const res = await axios.post(GRAPHQL_URL, { query });
       const transfer = res.data.data?.MonadUSDC_Transfer?.[0];
 
+      
       if (transfer) {
+      console.log(isAgentModeActive,transfer);
+
         if (booted.current == 0) {
           lastProcessedBlockRefID.current = transfer.block_number;
           booted.current = 1;
           return;
         }
+        
 
         const lastBlock = lastProcessedBlockRefID.current;
         if (lastBlock === transfer.block_number) return;
         lastProcessedBlockRefID.current = transfer.block_number;
 
         if (transfer.from == targetAddress) {
-          incrementRefreshCount();
+         
+          if(!isAgentModeActive){
+             incrementRefreshCount();
+         
           toast.error(`-${transfer.value / 1000000} USDC DEBITTED`, {
             position: "top-right",
             autoClose: 5000,
@@ -86,9 +98,24 @@ const Dashboard: React.FC = () => {
             progress: undefined,
             theme: "colored",
           });
+          }else{
+            setChatContext({
+              isUser:false,
+              query:`-${transfer.value / 1000000} USDC DEBITTED`
+            });
+            setTokenTransferContext({
+              to:transfer.to,
+              from:transfer.from,
+              amount:-(transfer.value / 1000000)  
+            });
+             incrementRefreshCount();
+         
+          }
         }
 
+          
         if (transfer.to == targetAddress) {
+           if(!isAgentModeActive){
           incrementRefreshCount();
           toast.success(`+${transfer.value / 1000000} USDC DEPOSITED`, {
             position: "top-right",
@@ -100,7 +127,20 @@ const Dashboard: React.FC = () => {
             progress: undefined,
             theme: "colored",
           });
+        }else{
+           incrementRefreshCount();
+         
+           setChatContext({
+              isUser:false,
+              query:`${transfer.value / 1000000} USDC DEPOSITTED`
+            });
+            setTokenTransferContext({
+              to:transfer.to,
+              from:transfer.from,
+              amount:(transfer.value / 1000000)
+            })
         }
+      }
       } else {
         console.log("No transfer found.");
       }

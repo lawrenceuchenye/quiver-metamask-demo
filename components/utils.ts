@@ -28,7 +28,7 @@ import { DelegationManager } from "@metamask/delegation-toolkit/contracts";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { encodeFunctionData,zeroAddress } from "viem";
 
-const CA = "0x84B80AF2Dab6c148CC9f61c9fae9fabB5a5975b8"; //"0x1d8b0d97900319aE0778cE45D67eA45cDaBF602B";
+const CA = "0x84B80AF2Dab6c148CC9f61c9fae9fabB5a5975b8"; 
 const TA = "0xf817257fed379853cDe0fa4F97AB987181B1E5Ea";
 const API_ENDPOINT = "http://localhost:8000";
 const FEE_1 = 0.05;
@@ -452,9 +452,33 @@ const agentAccount = await toMetaMaskSmartAccount({
   deployParams: [agentWalletInfo.address, [], [], []],
   deploySalt: "0x",
   signer: { account:  agentWalletInfo },
-})
+});
 
 
+const gasPriceResponse = await bundlerClient.request({
+  method: "pimlico_getUserOperationGasPrice",
+  params: [],
+});
+
+const maxFeePerGas = BigInt(gasPriceResponse.standard.maxFeePerGas);
+const maxPriorityFeePerGas = BigInt(
+  gasPriceResponse.standard.maxPriorityFeePerGas
+);
+
+console.log(agentWallet);
+const agentOperationHash = await bundlerClient.sendUserOperation({
+  account: agentAccount,
+  calls: [
+  
+    {
+      to: agentWallet.address, // the agent wallet (EOA you're "activating")
+      value: 0n,               // explicitly send 0 ETH
+      data: "0x",              // empty data for a no-op transfer
+    },
+  ],
+  maxFeePerGas: maxFeePerGas,
+  maxPriorityFeePerGas: maxPriorityFeePerGas,
+});
 const delegation = createDelegation({
   to: agentAccount.address, // This example uses a delegate smart account
   from: smartAccount.address,
@@ -540,7 +564,7 @@ const sendTransferWithDelegation = async (
       gasPriceResponse.standard.maxPriorityFeePerGas
     );
 
-    console.log(agentWallet);
+    console.log(agentWallet,);
     const agentOperationHash = await bundlerClient.sendUserOperation({
       account: agentWallet,
       calls: [
