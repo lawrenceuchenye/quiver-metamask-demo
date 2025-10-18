@@ -56,7 +56,7 @@ Backend Django + LangChain (ChromaDB + OpenAI)
 
 🔗 Smart Contract: View on Monad Explorer
 
-##🚀 Live Demo
+## 🚀 Live Demo
 
 Try Quiver now → https://quiverpay.vercel.app/
 
