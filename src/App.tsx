@@ -72,12 +72,7 @@ function App() {
       {isSettings && <Settings />}
       {isViewTxHistory && <TransactionHistory />}
 
-      {userData?.email &&
-        !userData.is_pin_active &&
-        !localStorage.getItem("quiverUserPIN") && <SetUpPIN />}
-      {userData?.pinHash &&
-        !userData.is_pin_active &&
-        !localStorage.getItem("quiverUserPIN") && <ConfirmPIN />}
+     
       {isCheckPIN && billInfo && isPay && <CheckPIN />}
       {isCheckPIN && offRampData && <CheckPIN />}
       {isCheckPIN && !isTxApproved && <CheckPIN />}

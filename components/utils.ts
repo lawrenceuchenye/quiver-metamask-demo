@@ -17,14 +17,11 @@ import {
 } from "viem/account-abstraction";
 
 import axios from "axios";
-import {createDelegation, revokeDelegation,
+import {
   toMetaMaskSmartAccount,
   Implementation,
-  createExecution,
-  getDeleGatorEnvironment,
-  ExecutionMode, 
+ 
 } from "@metamask/delegation-toolkit";
-import { DelegationManager } from "@metamask/delegation-toolkit/contracts";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { encodeFunctionData,zeroAddress } from "viem";
 
@@ -36,36 +33,6 @@ const FEE_2 = 0.1;
 const FEE_3 = 0.15;
 
 const RE_APPROVAL_WAIT_PERIOD = 90 * 24 * 60 * 60 * 1000; // 3 months
-
-// Setup
-const provider = new ethers.JsonRpcProvider(
-  `${import.meta.env.VITE_NETWORK_RPC}`
-);
-const privateKey = `${import.meta.env.VITE_USDC_FAUCET_PRIVATE_KEY}`; // Sender wallet
-const wallet = new ethers.Wallet(privateKey, provider);
-
-// Connect to the contract
-const usdc = new ethers.Contract(TA, erc20Abi, wallet);
-
-// Send 10 USDC (note: USDC has 6 decimals)
-const sendUSDC = async (recvWallet: string) => {
-  const tx = await usdc.transfer(recvWallet, ethers.parseUnits("0.01", 6));
-  try {
-    const receipt = await tx.wait();
-    console.log("Transaction USDC confirmed:", await receipt.transactionHash);
-  } catch (e) {
-    toast.error("UNSTABLE INTERNET CONNECTION,TRY AGAIN LATER", {
-      position: "top-right",
-      autoClose: 5000,
-      hideProgressBar: false,
-      closeOnClick: true,
-      pauseOnHover: true,
-      draggable: true,
-      progress: undefined,
-      theme: "colored",
-    });
-  }
-};
 
 interface Bank {
   name: string;
