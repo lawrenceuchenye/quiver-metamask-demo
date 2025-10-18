@@ -46,12 +46,12 @@ Utility Vendor / Market Payment
 ## 🛠️ Tech Stack
 
 Component Tool / Framework
-Blockchain Monad Testnet
-Stablecoin USDC
-User Onboarding Privy + MetaMask Smart Accounts
-Indexing Envio Indexer: https://github.com/lawrenceuchenye/quiver-indexer
-Smart Contracts Custom Quiver Escrow Contract: https://testnet.monadexplorer.com/address/0x84B80AF2Dab6c148CC9f61c9fae9fabB5a5975b8
-Frontend React + TypeScript
+Blockchain Monad Testnet  
+Stablecoin USDC  
+User Onboarding Privy + MetaMask Smart Accounts  
+Indexing Envio Indexer: https://github.com/lawrenceuchenye/quiver-indexer  
+Smart Contracts Custom Quiver Escrow Contract: https://testnet.monadexplorer.com/address/0x84B80AF2Dab6c148CC9f61c9fae9fabB5a5975b8  
+Frontend React + TypeScript  
 Backend Django + LangChain (ChromaDB + OpenAI)
 
 🔗 Smart Contract: View on Monad Explorer
