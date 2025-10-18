@@ -1,31 +1,32 @@
-Quiver – Stablecoin Payments for Everyday Life
+# Quiver – Stablecoin Payments for Everyday Life
 
 A seamless stablecoin-powered payment dApp built on Monad, enabling users across West Africa to pay bills, shop, and access financial services on-chain using USDC — all through a Web2-like experience.
 
-🌍 What is Quiver?
+# 🌍 What is Quiver?
 
 Quiver is a next-generation payments platform designed to make crypto truly usable in daily life. Built on the Monad testnet, Quiver lets users pay for utilities, buy airtime, and perform everyday transactions directly with USDC, all without the complexity of traditional wallets or unsafe P2P trades.
 
 By leveraging MetaMask Smart Accounts and Privy onboarding, Quiver offers an intuitive, gasless-like experience that bridges the gap between Web2 simplicity and Web3 power.
 
-⚙️ Key Features
-💰 Stablecoin Payments
+# ⚙️ Key Features
+
+# 💰 Stablecoin Payments
 
 Pay for airtime, electricity, and other utilities directly using USDC — simple, secure, and instant.
 
-🔐 Seamless Onboarding
+# 🔐 Seamless Onboarding
 
 MetaMask Smart Accounts + Privy integration provide a passwordless, Web2-style login experience for new users.
 
-⚡ Fast On & Off-Ramping
+# ⚡ Fast On & Off-Ramping
 
 Instantly convert between fiat and crypto — no risky P2P trades or centralized exchange delays.
 
-🧠 Smart Escrow Contracts
+# 🧠 Smart Escrow Contracts
 
 Utility payments are held in escrow and refunded automatically if a purchase fails — ensuring user trust and transparency.
 
-🔍 Real-Time Transaction Tracking
+# 🔍 Real-Time Transaction Tracking
 
 Integrated with Envio Indexer to monitor user deposits and withdrawals on-chain.
 → View Envio Indexer on GitHub Here: https://github.com/lawrenceuchenye/quiver-indexer
@@ -42,8 +43,10 @@ Envio Indexer (Deposit/Withdrawal Detection)
 ↓
 Utility Vendor / Market Payment
 
-🛠️ Tech Stack
+# 🛠️ Tech Stack
+
 Component Tool / Framework
+
 Blockchain Monad Testnet
 Stablecoin USDC
 User Onboarding Privy + Account Abstraction MetaMask Smart Accounts
@@ -54,13 +57,13 @@ Backend Django + Langchain[ chromaDB + OpenAI]
 
 🔗 Smart Contract: https://testnet.monadexplorer.com/address/0x84B80AF2Dab6c148CC9f61c9fae9fabB5a5975b8
 
-🚀 Live Demo
+# 🚀 Live Demo
 
 Try Quiver now: https://quiverpay.vercel.app/
 
 Best experienced on desktop browsers with wallet extensions like MetaMask or Rabby.
 
-🎯 Hackathon Tracks
+# 🎯 Hackathon Tracks
 
 This project targets:
 
