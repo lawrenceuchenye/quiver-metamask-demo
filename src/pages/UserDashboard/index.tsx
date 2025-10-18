@@ -26,6 +26,7 @@ const Dashboard: React.FC = () => {
   const setTokenTransferContext=useQuiverStore((state)=>state.setTokenTransferContext);
   const setChatContext=useQuiverStore((state)=>state.setChatContext);
   const isAgentModeActive=useQuiverStore((state)=>state.isAgentModeActive);
+  
 
   const setIsPending = useQuiverStore((state) => state.setIsPending);
   const setIsViewKYCForm = useQuiverStore((state) => state.setIsViewKYCForm);
@@ -43,7 +44,7 @@ const Dashboard: React.FC = () => {
 
   const GRAPHQL_URL = "http://localhost:8080/v1/graphql";
 
-  const fetchLatestTransfer = async (targetAddress: string) => {
+  const fetchLatestTransfer = async (targetAddress: string,agentMode:boolean) => {
     try {
       const query = `
   query {
@@ -70,7 +71,7 @@ const Dashboard: React.FC = () => {
 
       
       if (transfer) {
-      console.log(isAgentModeActive,transfer);
+      console.log(agentMode,transfer);
 
         if (booted.current == 0) {
           lastProcessedBlockRefID.current = transfer.block_number;
@@ -85,7 +86,7 @@ const Dashboard: React.FC = () => {
 
         if (transfer.from == targetAddress) {
          
-          if(!isAgentModeActive){
+          if(!agentMode){
              incrementRefreshCount();
          
           toast.error(`-${transfer.value / 1000000} USDC DEBITTED`, {
@@ -115,7 +116,7 @@ const Dashboard: React.FC = () => {
 
           
         if (transfer.to == targetAddress) {
-           if(!isAgentModeActive){
+           if(!agentMode){
           incrementRefreshCount();
           toast.success(`+${transfer.value / 1000000} USDC DEPOSITED`, {
             position: "top-right",
@@ -165,7 +166,7 @@ const Dashboard: React.FC = () => {
 
   useEffect(() => {
     const intervalIDi = setInterval(() => {
-      fetchLatestTransfer(userData?.walletAddr ? userData?.walletAddr : "0x");
+      fetchLatestTransfer(userData?.walletAddr ? userData?.walletAddr : "0x",isAgentModeActive);
     }, 3000);
 
     isVerified();

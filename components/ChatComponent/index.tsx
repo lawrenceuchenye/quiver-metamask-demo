@@ -8,9 +8,13 @@ import {
   sendUserOpsTransfer,
   sendTransferWithDelegation,
   TA,
-  CA
+  CA,FEE_1,FEE_2,FEE_3
 } from "../utils";
 import { useWallets } from "@privy-io/react-auth";
+
+const roundToThree = (num) => {
+  return Math.round(num * 1000) / 1000;
+};
 
 const index = () => {
   const ref = useRef(null);
@@ -51,9 +55,9 @@ const index = () => {
         intent:`exchangeRate:${pricingData} ${prompt}`,
         usdcBal:usdcBal,
         userWallet:userData.walletAddr,
-        to:tokenTransferContext ? tokenTransferContext.to :  null,
-        from:tokenTransferContext ? tokenTransferContext.from : null,
-        amount:tokenTransferContext ? tokenTransferContext.amount : null,
+        to:tokenTransferContext ? tokenTransferContext.to :  "",
+        from:tokenTransferContext ? tokenTransferContext.from : "",
+        amount:tokenTransferContext ? tokenTransferContext.amount : "",
         
       });
       console.log(res.data.res);
@@ -71,8 +75,7 @@ const index = () => {
         );
       
       }
-      setIsProcessing(false);
-
+   
       if (res.data.res.type == "airtime") {
         if (usdcBal < res.data.res.amount) {
           setIsProcessing(false);
@@ -83,8 +86,36 @@ const index = () => {
           res.data.res.amount,
           wallets
         );
+
+        console.log(res)
       
+        const res2 = await axios.post(`${API_ENDPOINT}/api/create_tx_monad/`, {
+          
+                    network: res.data.res.network, 
+                    userWallet: userData?.walletAddr,
+                  issuer_address: userData?.walletAddr,
+                   
+                    type:"Airtime",
+                    usdc_amount: roundToThree(
+            parseFloat( res.data.res.amount) +
+              (  res.data.res.amount < 0.65
+                ? FEE_1
+                :   res.data.res.amount > 0.65 &&   res.data.res.amount < 9
+                ? FEE_2
+                : FEE_3)
+          ),
+          amount: parseFloat(res.data.res.fiatamount),
+          fiat_amount: parseFloat(res.data.res.fiatamount),
+          code:"",
+           phone_number: res.data.res.receiver,
+          
+        });
+        setChatContext({ isUser: false, query: "Airtime purchase successful" });
       }
+
+         setIsProcessing(false);
+         
+ 
     
     }
 
@@ -103,25 +134,13 @@ const index = () => {
     getPrice();
     resetChatContext();
   
-    setContextUpdated(false);
+   
     return () => {
       el.removeEventListener("focus", onFocus);
     };
   }, []);
 
-  /*const getDelegationInfo=async()=>{
-    if( isAgentModeActive){
-      const { smartAccount,agentAccount,signedDelegation}=await initChat(wallets);
-      sendTransferWithDelegation(smartAccount,agentAccount,signedDelegation,"0x48Ea1279d1A299Dc1B29d54603ca52A7eC42259f",1,TA)
-      console.log(smartAccount,agentAccount,signedDelegation);
-      }
-  }
-
   
-  useEffect(()=>{
-  getDelegationInfo();
-  },[isAgentModeActive])
-*/
   return (
     <div className="chatHolder">
       <textarea

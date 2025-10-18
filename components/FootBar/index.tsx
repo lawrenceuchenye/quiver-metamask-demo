@@ -17,9 +17,7 @@ const index: React.FC = () => {
       "https://nutritious-yoke-fe0.notion.site/Quiver-FAQ-23d7f08710c780ce9c2deeed9df8264d";
   };
 
-  const navigateToX = () => {
-    window.location.href = "https://x.com/useQuiver";
-  };
+  
 
   return (
     <div className="footBar">
@@ -27,7 +25,7 @@ const index: React.FC = () => {
         <h3 onClick={() => navigateGetStarted()}>Get Started</h3>
         <h3 onClick={() => navigateFAQ()}>FAQ</h3>
         <h3 onClick={() => navigatePrivacyPolicy()}>Privacy Policy</h3>
-        <h3 onClick={() => navigateToX()}>X(twitter)</h3>
+        
         <h3>Whatsapp</h3>
       </div>
       <div className="copyrightContainer">
