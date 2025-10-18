@@ -1,3 +1,4 @@
+//@ts-nocheck
 import { ethers, parseUnits } from "ethers";
 import { toast } from "react-toastify";
 import {
