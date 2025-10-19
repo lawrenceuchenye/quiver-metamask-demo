@@ -23,10 +23,11 @@ const Dashboard: React.FC = () => {
     (state) => state.incrementRefreshCount
   );
 
-  const setTokenTransferContext=useQuiverStore((state)=>state.setTokenTransferContext);
-  const setChatContext=useQuiverStore((state)=>state.setChatContext);
-  const isAgentModeActive=useQuiverStore((state)=>state.isAgentModeActive);
-  
+  const setTokenTransferContext = useQuiverStore(
+    (state) => state.setTokenTransferContext
+  );
+  const setChatContext = useQuiverStore((state) => state.setChatContext);
+  const isAgentModeActive = useQuiverStore((state) => state.isAgentModeActive);
 
   const setIsPending = useQuiverStore((state) => state.setIsPending);
   const setIsViewKYCForm = useQuiverStore((state) => state.setIsViewKYCForm);
@@ -42,9 +43,12 @@ const Dashboard: React.FC = () => {
     return Math.round(num * 100) / 100;
   };
 
-  const GRAPHQL_URL = "http://localhost:8080/v1/graphql";
+  const GRAPHQL_URL = "https://70142595ea72.ngrok-free.app/v1/graphql";
 
-  const fetchLatestTransfer = async (targetAddress: string,agentMode:boolean) => {
+  const fetchLatestTransfer = async (
+    targetAddress: string,
+    agentMode: boolean
+  ) => {
     try {
       const query = `
   query {
@@ -69,79 +73,74 @@ const Dashboard: React.FC = () => {
       const res = await axios.post(GRAPHQL_URL, { query });
       const transfer = res.data.data?.MonadUSDC_Transfer?.[0];
 
-      
       if (transfer) {
-      console.log(agentMode,transfer);
+        console.log(agentMode, transfer);
 
         if (booted.current == 0) {
           lastProcessedBlockRefID.current = transfer.block_number;
           booted.current = 1;
           return;
         }
-        
 
         const lastBlock = lastProcessedBlockRefID.current;
         if (lastBlock === transfer.block_number) return;
         lastProcessedBlockRefID.current = transfer.block_number;
 
         if (transfer.from == targetAddress) {
-         
-          if(!agentMode){
-             incrementRefreshCount();
-         
-          toast.error(`-${transfer.value / 1000000} USDC DEBITTED`, {
-            position: "top-right",
-            autoClose: 5000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-            progress: undefined,
-            theme: "colored",
-          });
-          }else{
+          if (!agentMode) {
+            incrementRefreshCount();
+
+            toast.error(`-${transfer.value / 1000000} USDC DEBITTED`, {
+              position: "top-right",
+              autoClose: 5000,
+              hideProgressBar: false,
+              closeOnClick: true,
+              pauseOnHover: true,
+              draggable: true,
+              progress: undefined,
+              theme: "colored",
+            });
+          } else {
             setChatContext({
-              isUser:false,
-              query:`-${transfer.value / 1000000} USDC DEBITTED`
+              isUser: false,
+              query: `-${transfer.value / 1000000} USDC DEBITTED`,
             });
             setTokenTransferContext({
-              to:transfer.to,
-              from:transfer.from,
-              amount:-(transfer.value / 1000000)  
+              to: transfer.to,
+              from: transfer.from,
+              amount: -(transfer.value / 1000000),
             });
-             incrementRefreshCount();
-         
+            incrementRefreshCount();
           }
         }
 
-          
         if (transfer.to == targetAddress) {
-           if(!agentMode){
-          incrementRefreshCount();
-          toast.success(`+${transfer.value / 1000000} USDC DEPOSITED`, {
-            position: "top-right",
-            autoClose: 5000,
-            hideProgressBar: false,
-            closeOnClick: true,
-            pauseOnHover: true,
-            draggable: true,
-            progress: undefined,
-            theme: "colored",
-          });
-        }else{
-           incrementRefreshCount();
-         
-           setChatContext({
-              isUser:false,
-              query:`${transfer.value / 1000000} USDC DEPOSITTED`
+          if (!agentMode) {
+            incrementRefreshCount();
+            toast.success(`+${transfer.value / 1000000} USDC DEPOSITED`, {
+              position: "top-right",
+              autoClose: 5000,
+              hideProgressBar: false,
+              closeOnClick: true,
+              pauseOnHover: true,
+              draggable: true,
+              progress: undefined,
+              theme: "colored",
+            });
+          } else {
+            incrementRefreshCount();
+
+            setChatContext({
+              isUser: false,
+              query: `${transfer.value / 1000000} USDC DEPOSITTED`,
             });
             setTokenTransferContext({
-              to:transfer.to,
-              from:transfer.from,
-              amount:(transfer.value / 1000000)
-            })
+              to: transfer.to,
+              from: transfer.from,
+              amount: transfer.value / 1000000,
+            });
+          }
         }
-      }
       } else {
         console.log("No transfer found.");
       }
@@ -166,7 +165,10 @@ const Dashboard: React.FC = () => {
 
   useEffect(() => {
     const intervalIDi = setInterval(() => {
-      fetchLatestTransfer(userData?.walletAddr ? userData?.walletAddr : "0x",isAgentModeActive);
+      fetchLatestTransfer(
+        userData?.walletAddr ? userData?.walletAddr : "0x",
+        isAgentModeActive
+      );
     }, 3000);
 
     isVerified();
