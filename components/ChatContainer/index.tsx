@@ -27,6 +27,9 @@ const Chat: React.FC<ChatProp> = ({ isUser, query }) => {
 const index = () => {
   const chatContext = useQuiverStore((state) => state.chatContext);
   const chatEndRef = useRef(null);
+  const setAgentModeActive = useQuiverStore(
+    (state) => state.setAgentMondeActive
+  );
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -38,6 +41,11 @@ const index = () => {
       });
     }
   }, [chatContext]);
+
+  useEffect(() => {
+    setAgentModeActive(true);
+  }, []);
+
   return (
     <m.div
       className="chatContainer"

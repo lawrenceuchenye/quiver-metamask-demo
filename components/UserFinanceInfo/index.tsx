@@ -317,6 +317,14 @@ const UserActionsContainer: React.FC = () => {
 
 const index: React.FC = () => {
   const isAgentModeActive = useQuiverStore((state) => state.isAgentModeActive);
+  const [isMobile, setIsMobile] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (window.innerWidth < 750) {
+      setIsMobile(true);
+    }
+  }, [window.innerWidth]);
+
   return (
     <div className="infoHolder">
       <div className="uf-Header"></div>
@@ -326,7 +334,7 @@ const index: React.FC = () => {
           <UserActionsContainer />
         </div>
         {isAgentModeActive && <ChatContainer />}
-        <ChatComponent />
+        {!isMobile && <ChatComponent />}
       </div>
     </div>
   );

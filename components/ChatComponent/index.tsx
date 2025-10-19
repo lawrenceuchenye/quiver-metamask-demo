@@ -116,11 +116,12 @@ const index = () => {
   useEffect(() => {
     const el = ref.current;
     if (!el) return;
-    const onFocus = () => setAgentModeActive(true);
+    const onFocus = () => {
+      setAgentModeActive(true);
+    };
     el.addEventListener("focus", onFocus);
     getPrice();
     resetChatContext();
-
     return () => {
       el.removeEventListener("focus", onFocus);
     };
