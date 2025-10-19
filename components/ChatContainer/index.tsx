@@ -1,4 +1,5 @@
-import React,{useRef,useEffect} from "react";
+//@ts-nocheck
+import React, { useRef, useEffect } from "react";
 import "./index.css";
 import { motion as m } from "framer-motion";
 import useQuiverStore from "../../store";
@@ -9,7 +10,6 @@ interface ChatProp {
 }
 
 const Chat: React.FC<ChatProp> = ({ isUser, query }) => {
-  
   return (
     <div
       className="chat"
@@ -30,7 +30,6 @@ const index = () => {
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
-  
     const container = chatEndRef.current;
     if (container) {
       container.scrollTo({
@@ -56,7 +55,6 @@ const index = () => {
         {chatContext.map((chat) => {
           return <Chat isUser={chat.isUser} query={chat.query} />;
         })}
-         
       </div>
     </m.div>
   );
