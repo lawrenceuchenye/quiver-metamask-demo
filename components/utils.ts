@@ -11,7 +11,6 @@ import {
   http,
 } from "viem";
 import { providerToSmartAccountSigner } from "permissionless";
-import { base } from "wagmi/chains";
 import {
   createBundlerClient,
   createPaymasterClient,
