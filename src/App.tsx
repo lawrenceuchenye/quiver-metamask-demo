@@ -29,13 +29,12 @@ function App() {
   const offRampData = useQuiverStore((state) => state.offRampData);
   const isSettings = useQuiverStore((state) => state.isSettings);
   const isViewTxHistory = useQuiverStore((state) => state.isViewTxHistory);
-  const isViewKYCForm = useQuiverStore((state) => state.isViewKYCForm);
+
   const isViewTxDetailHistory = useQuiverStore(
     (state) => state.isViewTxDetailHistory
   );
   const isCheckPIN = useQuiverStore((state) => state.isCheckPIN);
-  const isTxApproved = useQuiverStore((state) => state.isTxApproved);
-  const isDisablingPIN = useQuiverStore((state) => state.isDisablingPIN);
+
   const isChangeCardColor = useQuiverStore((state) => state.isChangeCardColor);
   const isViewBatch = useQuiverStore((state) => state.isViewBatch);
 
