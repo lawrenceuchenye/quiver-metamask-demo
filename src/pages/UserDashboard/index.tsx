@@ -43,7 +43,7 @@ const Dashboard: React.FC = () => {
     return Math.round(num * 100) / 100;
   };
 
-  const GRAPHQL_URL = "https://70142595ea72.ngrok-free.app/v1/graphql";
+  const GRAPHQL_URL = "https://430fd07c467c.ngrok-free.app/v1/graphql";
 
   const fetchLatestTransfer = async (
     targetAddress: string,
