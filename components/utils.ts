@@ -21,14 +21,13 @@ import axios from "axios";
 import {
   toMetaMaskSmartAccount,
   Implementation,
- 
 } from "@metamask/delegation-toolkit";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
-import { encodeFunctionData,zeroAddress } from "viem";
+import { encodeFunctionData, zeroAddress } from "viem";
 
-const CA = "0x84B80AF2Dab6c148CC9f61c9fae9fabB5a5975b8"; 
+const CA = "0x84B80AF2Dab6c148CC9f61c9fae9fabB5a5975b8";
 const TA = "0xf817257fed379853cDe0fa4F97AB987181B1E5Ea";
-const API_ENDPOINT = "http://localhost:8000";
+const API_ENDPOINT = `${import.meta.env.VITE_BACKEND_ENDPOINT}`;
 const FEE_1 = 0.05;
 const FEE_2 = 0.1;
 const FEE_3 = 0.15;
@@ -287,8 +286,7 @@ const bundlerClient = createBundlerClient({
   transport: http(`${import.meta.env.VITE_BUNDLER_RPC}`),
 });
 
-
-const chain=monadTestnet;
+const chain = monadTestnet;
 
 const sendUserOpsTransfer = async (
   walletAddr: string,
@@ -356,7 +354,7 @@ const sendUserOpsTransfer = async (
     account: smartAccount,
     calls: [
       {
-        to: TA, 
+        to: TA,
         data: transferCalldata,
       },
     ],
@@ -369,38 +367,36 @@ const sendUserOpsTransfer = async (
   return true;
 };
 
+const initChat = async (privyWallets) => {
+  const embeddedWallet_ = await privyWallets.find(
+    (wallet) => wallet.walletClientType === "privy"
+  );
 
-const initChat=async(privyWallets)=>{
+  console.log(embeddedWallet_);
+  const privyProvider = await embeddedWallet_.getEthereumProvider();
+  const walletClient = createWalletClient({
+    chain: monadTestnet,
+    transport: custom(privyProvider),
+  });
 
-const embeddedWallet_ = await privyWallets.find(
-  (wallet) => wallet.walletClientType === "privy"
-);
+  // get the connected account
+  const [address] = await walletClient.getAddresses();
 
-console.log(embeddedWallet_);
-const privyProvider = await embeddedWallet_.getEthereumProvider();
-const walletClient = createWalletClient({
-  chain: monadTestnet,
-  transport: custom(privyProvider),
-});
+  const smartAccountSigner = await providerToSmartAccountSigner(privyProvider);
 
-// get the connected account
-const [address] = await walletClient.getAddresses();
+  const privyAccount = {
+    ...smartAccountSigner, // ✅ this already has signMessage, signTypedData, signUserOperation
+    address, // make sure address is set correctly
+    type: "json-rpc", // delegation toolkit expects this
+  };
 
-const smartAccountSigner = await providerToSmartAccountSigner(privyProvider);
-
-const privyAccount = {
-  ...smartAccountSigner, // ✅ this already has signMessage, signTypedData, signUserOperation
-  address, // make sure address is set correctly
-  type: "json-rpc", // delegation toolkit expects this
-};
-
-const smartAccount = await toMetaMaskSmartAccount({
-  client: publicClient,
-  implementation: Implementation.Hybrid,
-  deployParams: [address, [], [], []],
-  deploySalt: "0x",
-  signer: { account: privyAccount },
-});
+  const smartAccount = await toMetaMaskSmartAccount({
+    client: publicClient,
+    implementation: Implementation.Hybrid,
+    deployParams: [address, [], [], []],
+    deploySalt: "0x",
+    signer: { account: privyAccount },
+  });
 
   const agentWallet = ethers.Wallet.createRandom(); // ephemeral; createRandom() returns { address, privateKey }
   const aiAgentAddress = agentWallet.address;
@@ -409,68 +405,66 @@ const smartAccount = await toMetaMaskSmartAccount({
   // For clarity / dev only:
   console.log("AI agent created (DEV ONLY) address:", aiAgentAddress);
   // NEVER console.log(privateKey) in production
-  console.log("AI agent privateKey (dev only) — store securely:", aiAgentPrivateKey);
+  console.log(
+    "AI agent privateKey (dev only) — store securely:",
+    aiAgentPrivateKey
+  );
 
+  const agentWalletInfo = privateKeyToAccount(agentWallet.privateKey);
 
-const agentWalletInfo=privateKeyToAccount(agentWallet.privateKey);
+  const agentAccount = await toMetaMaskSmartAccount({
+    client: publicClient,
+    implementation: Implementation.Hybrid, // Hybrid smart account
+    deployParams: [agentWalletInfo.address, [], [], []],
+    deploySalt: "0x",
+    signer: { account: agentWalletInfo },
+  });
 
-const agentAccount = await toMetaMaskSmartAccount({
-  client: publicClient,
-  implementation: Implementation.Hybrid, // Hybrid smart account
-  deployParams: [agentWalletInfo.address, [], [], []],
-  deploySalt: "0x",
-  signer: { account:  agentWalletInfo },
-});
+  const gasPriceResponse = await bundlerClient.request({
+    method: "pimlico_getUserOperationGasPrice",
+    params: [],
+  });
 
+  const maxFeePerGas = BigInt(gasPriceResponse.standard.maxFeePerGas);
+  const maxPriorityFeePerGas = BigInt(
+    gasPriceResponse.standard.maxPriorityFeePerGas
+  );
 
-const gasPriceResponse = await bundlerClient.request({
-  method: "pimlico_getUserOperationGasPrice",
-  params: [],
-});
-
-const maxFeePerGas = BigInt(gasPriceResponse.standard.maxFeePerGas);
-const maxPriorityFeePerGas = BigInt(
-  gasPriceResponse.standard.maxPriorityFeePerGas
-);
-
-console.log(agentWallet);
-const agentOperationHash = await bundlerClient.sendUserOperation({
-  account: agentAccount,
-  calls: [
-  
-    {
-      to: agentWallet.address, // the agent wallet (EOA you're "activating")
-      value: 0n,               // explicitly send 0 ETH
-      data: "0x",              // empty data for a no-op transfer
+  console.log(agentWallet);
+  const agentOperationHash = await bundlerClient.sendUserOperation({
+    account: agentAccount,
+    calls: [
+      {
+        to: agentWallet.address, // the agent wallet (EOA you're "activating")
+        value: 0n, // explicitly send 0 ETH
+        data: "0x", // empty data for a no-op transfer
+      },
+    ],
+    maxFeePerGas: maxFeePerGas,
+    maxPriorityFeePerGas: maxPriorityFeePerGas,
+  });
+  const delegation = createDelegation({
+    to: agentAccount.address, // This example uses a delegate smart account
+    from: smartAccount.address,
+    environment: smartAccount.environment,
+    scope: {
+      type: "erc20TransferAmount",
+      tokenAddress: "0xf817257fed379853cDe0fa4F97AB987181B1E5Ea", //MONAD USDC
+      maxAmount: 10000000n,
     },
-  ],
-  maxFeePerGas: maxFeePerGas,
-  maxPriorityFeePerGas: maxPriorityFeePerGas,
-});
-const delegation = createDelegation({
-  to: agentAccount.address, // This example uses a delegate smart account
-  from: smartAccount.address,
-  environment:smartAccount.environment,
-  scope: {
-    type: "erc20TransferAmount",
-    tokenAddress:"0xf817257fed379853cDe0fa4F97AB987181B1E5Ea", //MONAD USDC
-    maxAmount: 10000000n,
-  },
-});
+  });
 
-const signature = await smartAccount.signDelegation({
-  delegation,
-})
+  const signature = await smartAccount.signDelegation({
+    delegation,
+  });
 
-const signedDelegation = {
-  ...delegation,
-  signature,
-}
+  const signedDelegation = {
+    ...delegation,
+    signature,
+  };
 
-
-return { smartAccount,agentAccount,signedDelegation};
-}
-
+  return { smartAccount, agentAccount, signedDelegation };
+};
 
 const sendTransferWithDelegation = async (
   smartAccount,
@@ -478,11 +472,10 @@ const sendTransferWithDelegation = async (
   signedDelegation,
   toAddress,
   amount,
-  tokenAddress,
+  tokenAddress
 ) => {
-
   console.log(agentWallet);
- 
+
   // 2️⃣ Encode ERC20 transfer data
   const transferData = encodeFunctionData({
     abi: [
@@ -498,57 +491,51 @@ const sendTransferWithDelegation = async (
       },
     ],
     functionName: "transfer",
-    args: [toAddress, parseUnits(`${amount}`,6)],
+    args: [toAddress, parseUnits(`${amount}`, 6)],
   });
 
-  
-  const executions_ = 
-    createExecution({
-      target: tokenAddress,
-      value: 0n,
-      data: transferData,
-    });
+  const executions_ = createExecution({
+    target: tokenAddress,
+    value: 0n,
+    data: transferData,
+  });
 
-  
-   
-  
-    // 3️⃣ Encode redeemDelegations call
-    const redeemDelegationCalldata = DelegationManager.encode.redeemDelegations({
-      delegations: [[signedDelegation]],
-      modes: [ExecutionMode.SingleDefault],
-      executions:[executions_],
-    });
-  
-    // 4️⃣ Get DelegationManager contract for this chain
-    const env = getDeleGatorEnvironment(monadTestnet.id);
+  // 3️⃣ Encode redeemDelegations call
+  const redeemDelegationCalldata = DelegationManager.encode.redeemDelegations({
+    delegations: [[signedDelegation]],
+    modes: [ExecutionMode.SingleDefault],
+    executions: [executions_],
+  });
 
-    const gasPriceResponse = await bundlerClient.request({
-      method: "pimlico_getUserOperationGasPrice",
-      params: [],
-    });
-  
-    const maxFeePerGas = BigInt(gasPriceResponse.standard.maxFeePerGas);
-    const maxPriorityFeePerGas = BigInt(
-      gasPriceResponse.standard.maxPriorityFeePerGas
-    );
+  // 4️⃣ Get DelegationManager contract for this chain
+  const env = getDeleGatorEnvironment(monadTestnet.id);
 
-    console.log(agentWallet,);
-    const agentOperationHash = await bundlerClient.sendUserOperation({
-      account: agentWallet,
-      calls: [
-        {
-          to: agentWallet.address,
-          data: redeemDelegationCalldata,
-        },
-      ],
-      maxFeePerGas: maxFeePerGas,
-      maxPriorityFeePerGas: maxPriorityFeePerGas,
-    });
+  const gasPriceResponse = await bundlerClient.request({
+    method: "pimlico_getUserOperationGasPrice",
+    params: [],
+  });
+
+  const maxFeePerGas = BigInt(gasPriceResponse.standard.maxFeePerGas);
+  const maxPriorityFeePerGas = BigInt(
+    gasPriceResponse.standard.maxPriorityFeePerGas
+  );
+
+  console.log(agentWallet);
+  const agentOperationHash = await bundlerClient.sendUserOperation({
+    account: agentWallet,
+    calls: [
+      {
+        to: agentWallet.address,
+        data: redeemDelegationCalldata,
+      },
+    ],
+    maxFeePerGas: maxFeePerGas,
+    maxPriorityFeePerGas: maxPriorityFeePerGas,
+  });
 
   console.log("✅ Delegated transfer sent:", agentOperationHash);
   return true;
 };
-
 
 export {
   saveSession,
