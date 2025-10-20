@@ -70,7 +70,7 @@ Envio Bonus – We’re applying for the Envio Bonus to help our dev team scale 
 
 ## Code walk
 
-Link to a code walk through of quiver:https://youtu.be/wu1it3emJUA
+Link to a code walk and agent demo through of quiver:https://youtu.be/wu1it3emJUA
 
 ## 🌐 Mission
 
