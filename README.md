@@ -66,7 +66,11 @@ Best Consumer Application – Real-world financial utility with intuitive UX and
 
 Best Use of Envio – Leveraging real-time blockchain data from Envio to feed our AI agent for better context awareness and real-time balance tracking.
 
-Envio Bonus – We’re applying for the Envio Bonus to help our dev team scale Quiver into a live product, using Envio’s indexing to power real-time tracking and on-chain transparency.
+Envio Bonus – We’re applying for the Envio Bonus to help our dev team scale Quiver into a live product, using Envio’s indexing to power real-time wallet tracking.
+
+## Code walk
+
+Link to a code walk through of quiver:https://youtu.be/wu1it3emJUA
 
 ## 🌐 Mission
 
